@@ -232,7 +232,7 @@ void (*cl_inet_idlesa)(netstackid_t, uint8_t, uint32_t, sa_family_t,
  *
  * IP is a fully D_MP STREAMS module/driver. Thus it does not depend on any
  * MT level protection given by STREAMS. IP uses a combination of its own
- * internal serialization mechanism and standard Solaris locking techniques.
+ * internal serialization mechanism and standard illumos locking techniques.
  * The internal serialization is per phyint.  This is used to serialize
  * plumbing operations, IPMP operations, most set ioctls, etc.
  *
@@ -247,7 +247,7 @@ void (*cl_inet_idlesa)(netstackid_t, uint8_t, uint32_t, sa_family_t,
  * be found in ip_if.c above the core primitives operating on ipsq_t.
  *
  * Lookups of an ipif or ill by a thread return a refheld ipif / ill.
- * Simiarly lookup of an ire by a thread also returns a refheld ire.
+ * Similarly lookup of an ire by a thread also returns a refheld ire.
  * In addition ipif's and ill's referenced by the ire are also indirectly
  * refheld. Thus no ipif or ill can vanish as long as an ipif is refheld
  * directly or indirectly. For example an SIOCSLIFADDR ioctl that changes the
@@ -259,7 +259,7 @@ void (*cl_inet_idlesa)(netstackid_t, uint8_t, uint32_t, sa_family_t,
  * More details are described above the comment in ip_sioctl_flags.
  *
  * Packet processing is based mostly on IREs and are fully multi-threaded
- * using standard Solaris MT techniques.
+ * using standard illumos MT techniques.
  *
  * There are explicit locks in IP to handle:
  * - The ip_g_head list maintained by mi_open_link() and friends.
@@ -434,7 +434,7 @@ void (*cl_inet_idlesa)(netstackid_t, uint8_t, uint32_t, sa_family_t,
  * conn_policy_cached is set indicating that policy has been cached.
  * conn_in_enforce_policy may or may not be set depending on whether
  * there is a global policy match or per-socket policy match.
- * Policy inheriting happpens in ip_policy_set once the destination is known.
+ * Policy inheriting happens in ip_policy_set once the destination is known.
  * Once the right policy is set on the conn_t, policy cannot change for
  * this socket. This makes life simpler for TCP (UDP ?) where
  * re-transmissions go out with the same policy. For symmetry, policy
@@ -1282,7 +1282,7 @@ icmp_frag_needed(mblk_t *mp, int mtu, ip_recv_attr_t *ira)
  *    AH/ESP headers, it is sent up to AH/ESP for validation before
  *    sending up. If there are only 8 bytes of returned message, then
  *    upper client will not be notified.
- * 3) Check with global policy to see whether it matches the constaints.
+ * 3) Check with global policy to see whether it matches the constraints.
  *    But this will be done only if icmp_accept_messages_in_clear is
  *    zero.
  * 4) If we need to change both in IP and ULP, then the decision taken
@@ -2196,7 +2196,7 @@ icmp_inbound_error_fanout_v4(mblk_t *mp, icmph_t *icmph, ip_recv_attr_t *ira)
 		 * Note that ira_pktlen and ira_ip_hdr_length are no longer
 		 * correct, but we don't use them any more here.
 		 *
-		 * If succesful, the mp has been modified to not include
+		 * If successful, the mp has been modified to not include
 		 * the ESP/AH header so we can fanout to the ULP's icmp
 		 * error handler.
 		 */
@@ -2272,7 +2272,7 @@ icmp_inbound_error_fanout_v4(mblk_t *mp, icmph_t *icmph, ip_recv_attr_t *ira)
 			}
 
 			/*
-			 * The packet in error is self-encapsualted.
+			 * The packet in error is self-encapsulated.
 			 * And we are finding it further encapsulated
 			 * which we could not have possibly generated.
 			 */
@@ -2446,7 +2446,7 @@ ipoptp_next(ipoptp_t *optp)
 		 * and the Flag field), which follow the pointer
 		 * field.  We don't need to check that these fields
 		 * fall within the length of the option because this
-		 * was implicitely done above.  We've checked that the
+		 * was implicitly done above.  We've checked that the
 		 * pointer value is at least IPOPT_MINOFF_IT, and that
 		 * it falls within the option.  Since IPOPT_MINOFF_IT >
 		 * IPOPT_POS_OV_FLG, we don't need the explicit check.
@@ -2916,7 +2916,7 @@ icmp_pkt(mblk_t *mp, void *stuff, size_t len, ip_recv_attr_t *ira)
  * Determine if an ICMP error packet can be sent given the rate limit.
  * The limit consists of an average frequency (icmp_pkt_err_interval measured
  * in milliseconds) and a burst size. Burst size number of packets can
- * be sent arbitrarely closely spaced.
+ * be sent arbitrarily closely spaced.
  * The state is tracked using two variables to implement an approximate
  * token bucket filter:
  *	icmp_pkt_err_last - lbolt value when the last burst started
@@ -3705,7 +3705,7 @@ ip_get_base_mtu(ill_t *ill, ire_t *ire)
  *
  * The caller has set IXAF_PMTU_DISCOVERY if path MTU discovery is desired.
  * We avoid path MTU discovery if it is disabled with ndd.
- * Furtermore, if the path MTU is too small, then we don't set DF for IPv4.
+ * Furthermore, if the path MTU is too small, then we don't set DF for IPv4.
  *
  * NOTE: We also used to turn it off for source routed packets. That
  * is no longer required since the dce is per final destination.
@@ -6270,7 +6270,7 @@ ipsec_set_req(cred_t *cr, conn_t *connp, ipsec_req_t *req)
 	 * If the requests need security, set enforce_policy.
 	 * If the requests are IPSEC_PREF_NEVER, one should
 	 * still set conn_out_enforce_policy so that ip_set_destination
-	 * marks the ip_xmit_attr_t appropriatly. This is needed so that
+	 * marks the ip_xmit_attr_t appropriately. This is needed so that
 	 * for connections that we don't cache policy in at connect time,
 	 * if global policy matches in ip_output_attach_policy, we
 	 * don't wrongly inherit global policy. Similarly, we need
@@ -6725,7 +6725,7 @@ ip_reassemble(mblk_t *mp, ipf_t *ipf, uint_t start, boolean_t more, ill_t *ill,
 		}
 		next_mp = mp->b_cont;
 		/*
-		 * We are checking to see if there is any interesing data
+		 * We are checking to see if there is any interesting data
 		 * to process.  If there isn't and the mblk isn't the
 		 * one which carries the unfragmentable header then we
 		 * drop it.  It's possible to have just the unfragmentable
@@ -6826,7 +6826,7 @@ ip_reassemble(mblk_t *mp, ipf_t *ipf, uint_t start, boolean_t more, ill_t *ill,
 		if (start < offset) {
 			if (start == 0) {
 				if (end >= offset) {
-					/* Nailed the hole at the begining. */
+					/* Nailed the hole at the beginning. */
 					ipf->ipf_hole_cnt--;
 				}
 			} else if (end < offset) {
@@ -7462,7 +7462,7 @@ reass_done:
 
 /*
  * Pullup function that should be used for IP input in order to
- * ensure we do not loose the L2 source address; we need the l2 source
+ * ensure we do not lose the L2 source address; we need the l2 source
  * address for IP_RECVSLLA and for ndp_input.
  *
  * We return either NULL or b_rptr.
@@ -8367,10 +8367,10 @@ ip_rput_dlpi_writer(ipsq_t *ipsq, queue_t *q, mblk_t *mp, void *dummy_arg)
 		/*
 		 * Note the error for IOCTL completion (mp1 is set when
 		 * ready to complete ioctl). If ill_ifname_pending_err is
-		 * set, an error occured during plumbing (ill_ifname_pending),
+		 * set, an error occurred during plumbing (ill_ifname_pending),
 		 * so we want to report that error.
 		 *
-		 * NOTE: there are two addtional DL_PHYS_ADDR_REQ's
+		 * NOTE: there are two additional DL_PHYS_ADDR_REQ's
 		 * (DL_IPV6_TOKEN and DL_IPV6_LINK_LAYER_ADDR) that are
 		 * expected to get errack'd if the driver doesn't support
 		 * these flags (e.g. ethernet). log will be set to B_FALSE
@@ -8741,7 +8741,7 @@ ip_rput_dlpi_writer(ipsq_t *ipsq, queue_t *q, mblk_t *mp, void *dummy_arg)
 		 * If paddrlen or ill_phys_addr_length is zero, the DLPI
 		 * provider doesn't support physical addresses.  We check both
 		 * paddrlen and ill_phys_addr_length because sppp (PPP) does
-		 * not have physical addresses, but historically adversises a
+		 * not have physical addresses, but historically advertises a
 		 * physical address length of 0 in its DL_INFO_ACK, but 6 in
 		 * its DL_PHYS_ADDR_ACK.
 		 */
@@ -8951,7 +8951,7 @@ ip_forward_options(mblk_t *mp, ipha_t *ipha, ill_t *dst_ill,
 			uint32_t off;
 		case IPOPT_SSRR:
 		case IPOPT_LSRR:
-			/* Check if adminstratively disabled */
+			/* Check if administratively disabled */
 			if (!ipst->ips_ip_forward_src_routed) {
 				BUMP_MIB(dst_ill->ill_ip_mib,
 				    ipIfStatsForwProhibits);
@@ -13141,7 +13141,7 @@ conn_drain_insert(conn_t *connp, idl_tx_list_t *tx_list)
 		return;
 	} else if (connp->conn_idl == NULL) {
 		/*
-		 * Assign the next drain list round robin. We dont' use
+		 * Assign the next drain list round robin. We don't use
 		 * a lock, and thus it may not be strictly round robin.
 		 * Atomicity of load/stores is enough to make sure that
 		 * conn_drain_list_index is always within bounds.
@@ -13592,7 +13592,7 @@ ip_priv_free(void *buf)
  * on (inbound and outbound resp.).
  *
  * We do the processing on the rill (mapped to the upper if ipmp), but MIB
- * on the ill corrsponding to the destination IP address.
+ * on the ill corresponding to the destination IP address.
  */
 mblk_t *
 ip_process(ip_proc_t proc, mblk_t *mp, ill_t *rill, ill_t *ill)

@@ -17,7 +17,7 @@
  * This plugin implements the SDC VXLAN Protocol (SVP).
  *
  * This plugin is designed to work with a broader distributed system that
- * mainains a database of mappings and provides a means of looking up data and
+ * maintains a database of mappings and provides a means of looking up data and
  * provides a stream of updates. While it is named after VXLAN, there isn't
  * anything specific to VXLAN baked into the protocol at this time, other than
  * that it requires both an IP address and a port; however, if there's a good
@@ -31,14 +31,14 @@
  *
  *    VL3
  *
- * 	A VL3 address, or virtual layer 3, refers to the layer three addreses
+ * 	A VL3 address, or virtual layer 3, refers to the layer three addresses
  * 	that are used by entities on an overlay network. As far as we're
  * 	concerned that means that this is the IP address of an interface on an
  * 	overlay network.
  *
  *    VL2
  *
- *    	A VL2 address, or a virtual layer 2, referes to the link-layer addresses
+ *    	A VL2 address, or a virtual layer 2, refers to the link-layer addresses
  *    	that are used by entities on an overlay network. As far as we're
  *    	concerned that means that this is the MAC addresses of an interface on
  *    	an overlay network.
@@ -71,7 +71,7 @@
  * to contact. Though, we have co-opted the port 1296 (the year of the oldest
  * extant portolan) as our default port.
  *
- * Each of the different instance of the plugins has a corresponding remote
+ * Each of the different instances of the plugins has a corresponding remote
  * backend. The remote backend represents the tuple of the [ host, port ].
  * Different instances that share the same host and port tuple will use the same
  * backend.
@@ -155,10 +155,10 @@
  *   | svp_status_t    ---+-> request status
  *   +--------------------+
  *
- * The svp_t is the instance that we assoicate with varpd. The instance itself
+ * The svp_t is the instance that we associate with varpd. The instance itself
  * maintains properties and then when it's started associates with an
  * svp_remote_t, which is the remote backend. The remote backend itself,
- * maintains the DNS state and spins up and downs connections based on the
+ * maintains the DNS state and spins up and down connections based on the
  * results from DNS. By default, we query DNS every 30 seconds. For more on the
  * connection life cycle, see the next section.
  *
@@ -181,7 +181,7 @@
  * We have a connection pool that's built upon DNS records. DNS describes the
  * membership of the set of remote peers that make up our pool and we maintain
  * one connection to each of them.  In addition, we maintain an exponential
- * backoff for each peer and will attempt to reconect immediately before backing
+ * backoff for each peer and will attempt to reconnect immediately before backing
  * off. The following are the valid states that a connection can be in:
  *
  * 	SVP_CS_ERROR		An OS error has occurred on this connection,
@@ -202,7 +202,7 @@
  *	SVP_CS_ACTIVE		We have successfully connected to the remote
  *				system.
  *
- *	SVP_CS_WINDDOWN		This connection is going to valhalla. In other
+ *	SVP_CS_WINDDOWN		This connection is going to Valhalla. In other
  *				words, a previously active connection is no
  *				longer valid in DNS, so we should curb our use
  *				of it, and reap it as soon as we have other
@@ -270,7 +270,7 @@
  * by definition must exist. Once that's done, we inject a port source user
  * event. Now, there is a small gotcha. Let's assume for a moment that we have a
  * pathological portolan. That means that it knows to inject activity right at
- * the time out window. That means, that the event may be disassociated before
+ * the time out window. That means that the event may be disassociated before
  * we could get to it. If that's the case, we must _not_ inject the user event
  * and instead, we'll let the pending event take care of it. We know that the
  * pending event hasn't hit the main part of the loop yet, otherwise, it would
@@ -281,7 +281,7 @@
  * ------------
  *
  * Unfortunately, doing host name resolution in a way that allows us to leverage
- * the system's resolvers and the system's caching, require us to make blocking
+ * the system's resolvers and the system's caching, requires us to make blocking
  * calls in libc via getaddrinfo(3SOCKET). If we can't reach a given server,
  * that will tie up a thread for quite some time. To work around that fact,
  * we're going to create a fixed number of threads and we'll use them to service
@@ -305,13 +305,13 @@
  * ----------
  *
  * As part of the protocol, we need to be able to handle shootdowns that inform
- * us some of the information in the system is out of date. This information
+ * us that some of the information in the system is out of date. This information
  * needs to be processed promptly; however, the information is hopefully going
  * to be relatively infrequent relative to the normal flow of information.
  *
  * The shoot down information needs to be done on a per-backend basis. The
  * general design is that we'll have a single query for this which can fire on a
- * 5-10s period, we randmoize the latter part to give us a bit more load
+ * 5-10s period, we randomize the latter part to give us a bit more load
  * spreading. If we complete because there's no work to do, then we wait the
  * normal period. If we complete, but there's still work to do, we'll go again
  * after a second.

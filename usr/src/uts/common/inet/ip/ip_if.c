@@ -4472,7 +4472,7 @@ ipif_comp_multi(ipif_t *old_ipif, ipif_t *new_ipif, boolean_t isv6)
 }
 
 /*
- * Find a mulitcast-capable ipif given an IP instance and zoneid.
+ * Find a multicast-capable ipif given an IP instance and zoneid.
  * The ipif must be up, and its ill must multicast-capable, not
  * condemned, not an underlying interface in an IPMP group, and
  * not a VNI interface.  Order of preference:

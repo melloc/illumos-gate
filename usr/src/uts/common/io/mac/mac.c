@@ -97,7 +97,7 @@
  * General rules.
  * -------------
  *
- * R1. The lock order of upcall threads is natually opposite to downcall
+ * R1. The lock order of upcall threads is naturally opposite to downcall
  * threads. Hence upcalls must not hold any locks across layers for fear of
  * recursive lock enter and lock order violation. This applies to all layers.
  *
@@ -108,7 +108,7 @@
  * Note that upcalls that need to grab the mac perimeter (for example
  * mac_notify upcalls) can still achieve that by posting the request to a
  * thread, which can then grab all the required perimeters and locks in the
- * right global order. Note that in the above example the mac layer iself
+ * right global order. Note that in the above example the mac layer itself
  * won't grab the mac perimeter in the mac_notify upcall, instead the upcall
  * to the client must do that. Please see the aggr code for an example.
  *
@@ -116,7 +116,7 @@
  * ----------------
  *
  * R3. A MAC client may use the MAC provided perimeter facility to serialize
- * control operations on a per mac end point. It does this by by acquring
+ * control operations on a per mac end point. It does this by by acquiring
  * and holding the perimeter across a sequence of calls to the mac layer.
  * This ensures atomicity across the entire block of mac calls. In this
  * model the MAC client must not hold any client locks across the calls to
@@ -159,7 +159,7 @@
  * any other layer could be via mi_* entry points, classifier entry points into
  * the driver or via upcall pointers into layers above. The mac perimeter may
  * be acquired or held only in the down direction, e.g. when calling into
- * a mi_* driver enty point to provide atomicity of the operation.
+ * a mi_* driver entry point to provide atomicity of the operation.
  *
  * R8. Since it is not guaranteed (see R14) that drivers won't hold locks across
  * mac driver interfaces, the MAC layer must provide a cut out for control
@@ -230,7 +230,7 @@
  * mac perim -> i_dls_devnet_lock [dls_devnet_rename]
  *
  * Perimeters are ordered P1 -> P2 -> P3 from top to bottom in order of mac
- * client to driver. In the case of clients that explictly use the mac provided
+ * client to driver. In the case of clients that explicitly use the mac provided
  * perimeter mechanism for its serialization, the hierarchy is
  * Perimeter -> mac layer locks, since the client never holds any locks across
  * the mac calls. In the case of clients that use its own locks the hierarchy
@@ -504,7 +504,7 @@ mac_init_ops(struct dev_ops *ops, const char *name)
 
 	/*
 	 * By returning on error below, we are not letting the driver continue
-	 * in an undefined context.  The mac_register() function will faill if
+	 * in an undefined context.  The mac_register() function will fail if
 	 * DN_GLDV3_DRIVER isn't set.
 	 */
 	if (major == DDI_MAJOR_T_NONE)
@@ -708,7 +708,7 @@ mac_callback_remove_wait(mac_cb_info_t *mcbi)
 }
 
 /*
- * The last mac callback walker does the cleanup. Walk the list and unlik
+ * The last mac callback walker does the cleanup. Walk the list and unlink
  * all the logically deleted entries and construct a temporary list of
  * removed entries. Return the list of removed entries to the caller.
  */
@@ -797,7 +797,7 @@ i_mac_promisc_walker_cleanup(mac_impl_t *mip)
 
 	/*
 	 * Construct a temporary list of deleted callbacks by walking the
-	 * the mi_promisc_list. Then for each entry in the temporary list,
+	 * mi_promisc_list. Then for each entry in the temporary list,
 	 * remove it from the mci_promisc_list and free the entry.
 	 */
 	rmlist = mac_callback_walker_cleanup(&mip->mi_promisc_cb_info,
@@ -1161,7 +1161,7 @@ mac_stop(mac_handle_t mh)
 			 *
 			 * When clients are torn down, the groups
 			 * are release via mac_release_rx_group which
-			 * knows the the default group is always in
+			 * knows the default group is always in
 			 * started mode since broadcast uses it. So
 			 * we can assert that their are no clients
 			 * (since mac_bcast_add doesn't register itself
@@ -1986,7 +1986,7 @@ mac_set_group_state(mac_group_t *grp, mac_group_state_t state)
 		 *
 		 * Given that there is an exclusive client controlling this
 		 * group, we enable the group level polling when available,
-		 * so that SRSs get to turn on/off individual rings they's
+		 * so that SRSs get to turn on/off individual rings they're
 		 * assigned to.
 		 */
 		ASSERT(MAC_PERIM_HELD(grp->mrg_mh));
@@ -2157,7 +2157,7 @@ mac_srs_quiesce_wait(mac_soft_ring_set_t *srs, uint_t srs_flag)
  * 3. Quiesce the SRS and softrings by signaling the SRS. The SRS poll thread,
  *    SRS worker thread, and the soft ring threads are quiesced in sequence
  *    with the SRS worker thread serving as a master controller. This
- *    mechansim is explained in mac_srs_worker_quiesce().
+ *    mechanism is explained in mac_srs_worker_quiesce().
  *
  * The restart mechanism to reactivate the SRS and softrings is explained
  * in mac_srs_worker_restart(). Here we just signal the SRS worker to start the
@@ -3726,7 +3726,7 @@ mac_prop_info(mac_handle_t mh, mac_prop_id_t id, char *name,
 
 		/*
 		 * The caller specifies the maximum number of ranges
-		 * it can accomodate using mpr_count. We don't touch
+		 * it can accommodate using mpr_count. We don't touch
 		 * this value until the driver returns from its
 		 * mc_propinfo() callback, and ensure we don't exceed
 		 * this number of range as the driver defines
@@ -3740,7 +3740,7 @@ mac_prop_info(mac_handle_t mh, mac_prop_id_t id, char *name,
 		 * the number of ranges specified by the driver on
 		 * success, or the number of ranges it wanted to
 		 * define if that number of ranges could not be
-		 * accomodated by the specified range structure.  In
+		 * accommodated by the specified range structure.  In
 		 * the latter case, the caller will be able to
 		 * allocate a larger range structure, and query the
 		 * property again.
@@ -3870,7 +3870,7 @@ mac_unregister_priv_prop(mac_impl_t *mip)
  * (by invoking mac_rx()) even after processing mac_stop_ring(). In such
  * cases if MAC free's the ring structure after mac_stop_ring(), any
  * illegal access to the ring structure coming from the driver will panic
- * the system. In order to protect the system from such inadverent access,
+ * the system. In order to protect the system from such inadvertent access,
  * we maintain a cache of rings in the mac_impl_t after they get free'd up.
  * When packets are received on free'd up rings, MAC (through the generation
  * count mechanism) will drop such packets.
@@ -4468,7 +4468,7 @@ bail:
 }
 
 /*
- * The ddi interrupt handle could be shared amoung rings. If so, compare
+ * The ddi interrupt handle could be shared among rings. If so, compare
  * the new ring's ddi handle with the existing ones and set ddi_shared
  * flag.
  */
@@ -4560,7 +4560,7 @@ mac_free_rings(mac_impl_t *mip, mac_ring_type_t rtype)
 
 	/* Free all the cached rings */
 	mac_ring_freeall(mip);
-	/* Free the block of group data strutures */
+	/* Free the block of group data structures */
 	kmem_free(groups, sizeof (mac_group_t) * (group_count + 1));
 }
 
@@ -5618,7 +5618,7 @@ mac_update_macaddr(mac_address_t *map, uint8_t *mac_addr)
 /*
  * Freshen the MAC address with new value. Its caller must have updated the
  * hardware MAC address before calling this function.
- * This funcitons is supposed to be used to handle the MAC address change
+ * This function is supposed to be used to handle the MAC address change
  * notification from underlying drivers.
  */
 void
@@ -6306,7 +6306,7 @@ mac_flow_update_priority(mac_client_impl_t *mcip, flow_entry_t *flent)
  * groups according to information gathered from the driver through
  * the share capability.
  *
- * The foreseable evolution of Rx rings will handle v12n level 2 and higher
+ * The foreseeable evolution of Rx rings will handle v12n level 2 and higher
  * to allocate individual rings out of a group and program the hw classifier
  * based on IP address or higher level criteria.
  */
@@ -6777,7 +6777,7 @@ i_mac_clients_hw(mac_group_t *grp, uint32_t mask)
  * Finds an available group and exclusively reserves it for a client.
  * The group is chosen to suit the flow's resource controls (bandwidth and
  * fanout requirements) and the address type.
- * If the requestor is the pimary MAC then return the group with the
+ * If the requester is the pimary MAC then return the group with the
  * largest number of rings, otherwise the default ring when available.
  */
 mac_group_t *

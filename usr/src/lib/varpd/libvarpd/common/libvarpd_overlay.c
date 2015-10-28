@@ -232,7 +232,7 @@ libvarpd_overlay_lookup_reply(varpd_impl_t *vip,
 
 	/*
 	 * The only errors that should cause us to end up here are due to
-	 * programmer errors. Aruably the EINAVL case indicates that something
+	 * programmer errors. Arguably the EINVAL case indicates that something
 	 * is a bit off; however, at this time we don't opt to kill varpd.
 	 */
 	if (ret != 0 && errno != EINVAL)

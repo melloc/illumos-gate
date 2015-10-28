@@ -2724,12 +2724,12 @@ mac_group_next_state(mac_group_t *grp, mac_client_impl_t **group_only_mcip,
  * and polling mode and enforces any specified B/W control.
  *
  * There is always a SRS created and tied to each H/W and S/W rule.
- * Whenever we create a H/W rule, we always add the the same rule to
+ * Whenever we create a H/W rule, we always add the same rule to
  * S/W classifier and tie a SRS to it.
  *
- * In case a B/W control is specified, its broken into bytes
+ * In case a B/W control is specified, it's broken into bytes
  * per ticks and as soon as the quota for a tick is exhausted,
- * the underlying Rx ring is forced into poll mode for remianing
+ * the underlying Rx ring is forced into poll mode for remaining
  * tick. The SRS poll thread only polls for bytes that are
  * allowed to come in the SRS. We typically let 4x the configured
  * B/W worth of packets to come in the SRS (to prevent unnecessary
@@ -2745,8 +2745,8 @@ mac_group_next_state(mac_group_t *grp, mac_client_impl_t **group_only_mcip,
  * but packets still continue to flow via the default path and
  * getting S/W classified to correct SRS.
  *
- * In other cases where a NIC or VNIC is plumbed, our goal is use
- * H/W classifier and get two Rx ring assigned for the Link. One
+ * In other cases where a NIC or VNIC is plumbed, our goal is use a
+ * H/W classifier and get two Rx rings assigned for the Link: one
  * for TCP and one for UDP|SCTP. The respective SRS still do the
  * polling on the Rx ring. For Link that is plumbed for IP, there
  * is a TCP squeue which also does polling and can control the
@@ -2755,11 +2755,11 @@ mac_group_next_state(mac_group_t *grp, mac_client_impl_t **group_only_mcip,
  * 1) non IP based Links (Links which are not plumbed via ifconfig)
  *    and paths which have no IP squeues (UDP & SCTP)
  * 2) If B/W control is specified on the Link
- * 3) If S/W fanout is secified
+ * 3) If S/W fanout is specified
  *
  * Note1: As of current implementation, we try to assign only 1 Rx
  * ring per Link and more than 1 Rx ring for primary Link for
- * H/W based fanout. We always create following softrings per SRS:
+ * H/W based fanout. We always create the following softrings per SRS:
  * 1) TCP softring which is polled by TCP squeue where possible
  *    (and also bypasses DLS)
  * 2) UDP/SCTP based which bypasses DLS
@@ -2776,7 +2776,7 @@ mac_group_next_state(mac_group_t *grp, mac_client_impl_t **group_only_mcip,
  * which benefits by polling, we separate TCP packets into
  * its own softring which can be polled by IP squeue. We need
  * to separate out UDP/SCTP to UDP softring since it can bypass
- * the DLS layer which has heavy performance advanatges and we
+ * the DLS layer which has heavy performance advantages and we
  * need a softring (OTH) for rest.
  *
  * ToDo: The 3 softrings for protocol are needed only till we can
@@ -2812,7 +2812,7 @@ mac_group_next_state(mac_group_t *grp, mac_client_impl_t **group_only_mcip,
  * Primary NIC:
  *	The Link that owns the primary MAC address and typically
  *	is used as the data NIC in non virtualized cases. As such
- *	H/W resources are preferntially given to primary NIC. As
+ *	H/W resources are preferentially given to primary NIC. As
  *	far as code is concerned, there is no difference in the
  *	primary NIC vs VNICs. They are all treated as Links.
  *	At the very first call to mac_unicast_add() we program the S/W
@@ -2859,10 +2859,10 @@ mac_group_next_state(mac_group_t *grp, mac_client_impl_t **group_only_mcip,
  * If the NIC has more than 1 Rx ring, we assign the default ring (the
  * 1st ring) to deal with broadcast, multicast and traffic for other
  * NICs which needs S/W classification. We assign the primary mac
- * addresses to another ring by specifiying a classification rule for
+ * addresses to another ring by specifying a classification rule for
  * primary unicast MAC address to the selected ring. The primary Link
  * (and its SRS) can continue to poll the assigned Rx ring at all times
- * independantly.
+ * independently.
  *
  * Note: In future, if no fanout is specified, we try to assign 2 Rx
  * rings for the primary Link with the primary MAC address + TCP going
@@ -2877,7 +2877,7 @@ mac_group_next_state(mac_group_t *grp, mac_client_impl_t **group_only_mcip,
  * H/W default Rx ring for the rest (this Rx ring is never polled).
  *
  * For clients that don't have MAC address, but want to receive and
- * transmit packets (e.g, bpf, gvrp etc.), we need to setup the datapath.
+ * transmit packets (e.g., bpf, gvrp etc.), we need to setup the datapath.
  * For such clients (identified by the MCIS_NO_UNICAST_ADDR flag) we
  * always give the default group and use software classification (i.e.
  * even if this is the only client in the default group, we will
