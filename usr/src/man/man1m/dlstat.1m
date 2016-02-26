@@ -1,0 +1,167 @@
+.\"
+.\" This file and its contents are supplied under the terms of the
+.\" Common Development and Distribution License ("CDDL"), version 1.0.
+.\" You may only use this file in accordance with the terms of version
+.\" 1.0 of the CDDL.
+.\"
+.\" A full copy of the text of the CDDL should have accompanied this
+.\" source.  A copy of the CDDL is also available via the Internet at
+.\" http://www.illumos.org/license/CDDL.
+.\"
+.\"
+.\" Copyright (c) 2016, Joyent, Inc.  All rights reserved.
+.\"
+.Dd Feb 24, 2016
+.Dt DLSTAT 1M
+.Os
+.Sh NAME
+.Nm dlstat
+.Nd description here
+.Sh SYNOPSIS
+.Nm
+.Op Fl r | t
+.Op Fl i Ar interval
+.Op Ar link
+.Nm
+.Op Fl a | A
+.Op Fl i Ar interval
+.Op Fl p
+.Op Fl o Ar field Op ,...
+.Op Fl u Ar units
+.Op Ar link
+.Nm
+.Cm show-phys
+.Op Fl r | t
+.Op Fl i Ar interval
+.Op Fl a
+.Op Fl p
+.Op Fl o Ar field Op ,...
+.Op Fl u Ar units
+.Op Ar link
+.Nm
+.Cm show-link
+.Oo
+.Fl r Op Fl F
+|
+.Fl t
+.Oc
+.Op Fl i Ar interval
+.Op Fl a
+.Op Fl p
+.Op Fl o Ar field Op ,...
+.Op Fl u Ar units
+.Op Ar link
+.Nm
+.Cm show-link
+.Fl h
+.Op Fl a
+.Op Fl d
+.Op Fl F Ar format
+.Op Fl s Ar DD/MM/YYY,HH:MM:SS
+.Op Fl e Ar DD/MM/YYYY,HH:MM:SS
+.Fl f Ar logfile
+.Op Ar link
+.Nm
+.Cm show-aggr
+.Op Fl r | t
+.Op Fl i Ar interval
+.Op Fl p
+.Op Fl o Ar field Op ,...
+.Op Fl u Ar units
+.Op Ar link
+.Sh DESCRIPTION
+.Sh OPTIONS
+The following options are common to many of the available subcommands:
+.Bl -tag
+.It Fl i Ar interval
+Fill me in
+.It Fl o Ar field Op ,...
+Display the given fields when printing. The field specification must be comma
+separated. Valid fields are listed below.
+.Pp
+List of supported RX fields:
+.Bl -tag
+.It Sy link
+.It Sy type
+.It Sy id
+.It Sy index
+.It Sy ipkts
+.It Sy rbytes
+.El
+.Pp
+List of supported TX fields:
+.Bl -tag
+.It Sy link
+.It Sy type
+.It Sy id
+.It Sy index
+.It Sy opkts
+.It Sy obytes
+Foo
+.El
+.Pp
+.It Fl p
+The output is displayed in a machine-parsable format.
+.It Fl r
+Display receive-side packet statistics which includes the amount of packets
+received, bytes received, and errors encountered.
+.It Fl t
+Display transmit-side packet statistics which includes the amount of packets
+transmitted, bytes transmitted, and errors encountered.
+.It Fl u Cm R | K | M | G | T | P
+Display the statistcis in a chosen unit. This can be one of (R)aw Numbers,
+(K)ilobits, (M)egabits, (G)igabits, (T)erabits, or (P)etabits.
+.El
+.Sh SUBCOMMANDS
+The
+.Nm
+command may be invoked in the following ways:
+.Bl -tag
+.It Nm
+.Cm show-phys
+.Op Fl r | t
+.Op Fl i Ar interval
+.Op Fl a
+.Op Fl p
+.Op Fl o Ar field Op ,...
+.Op Fl u Ar units
+.Op Ar link
+.It Nm
+.Cm show-link
+.Oo
+.Fl r Op F
+|
+.Fl t
+.Oc
+.Op Fl i Ar interval
+.Op Fl a
+.Op Fl p
+.Op Fl o Ar field Op ,...
+.Op Fl u Ar units
+.Op Ar link
+.It Nm
+.Cm show-link
+.Fl h
+.Op Fl a
+.Op Fl d
+.Op Fl F Ar format
+.Op Fl s Ar DD/MM/YYY,HH:MM:SS
+.Op Fl e Ar DD/MM/YYYY,HH:MM:SS
+.Fl f Ar logfile
+.Op Ar link
+.It Nm
+.Cm show-aggr
+.Op Fl r | t
+.Op Fl i Ar interval
+.Op Fl p
+.Op Fl o Ar field Op ,...
+.Op Fl u Ar units
+.Op Ar link
+.Sh EXAMPLES
+.Ss Example 1
+.Sh STABILITY
+The command line options for this command are stable, but the output format
+and diagnostic messages are not.
+.Sh SEE ALSO
+.Xr dladm 1M ,
+.Xr dlpi 7P
