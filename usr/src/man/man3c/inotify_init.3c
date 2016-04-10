@@ -26,7 +26,6 @@ inotify_init, inotify_init1 \- initialize an inotify instance
 .fi
 
 .SH DESCRIPTION
-.sp
 .LP
 The \fBinotify_init()\fR and \fBinotify_init1()\fR functions both create an
 \fBinotify\fR(5) instance that can be operated upon via
@@ -62,12 +61,10 @@ no events enqueued in lieu of blocking.
 .RE
 
 .SH RETURN VALUES
-.sp
 .LP
-Upon succesful completion, 0 is returned. Otherwise, -1 is returned and errno
+Upon successful completion, 0 is returned. Otherwise, -1 is returned and errno
 is set to indicate the error.
 .SH ERRORS
-.sp
 .LP
 The \fBinotify_init()\fR and \fBinotify_init1()\fR functions will fail if:
 .sp
@@ -86,22 +83,20 @@ The \fIflags\fR are invalid (\fBinotify_init1()\fR).
 .ad
 .RS 10n
 There are currently {\fBOPEN_MAX\fR} file descriptors open in the calling
-process, or the maximum number of \fBinotify\fR instances for the user 
+process, or the maximum number of \fBinotify\fR instances for the user
 would be exceeded.
 .RE
 
 .sp
 .SH NOTES
-.sp
 .LP
 
 While the \fBinotify\fR(5) facility is implemented for purposes of
 offering compatibility for Linux-borne applications, native
-applications may opt to use it instead of (or in addition to) the 
+applications may opt to use it instead of (or in addition to) the
 \fBPORT_SOURCE_FILE\fR capability of event ports.  See
 \fBinotify\fR(5) for details and restrictions.
 
 .SH SEE ALSO
-.sp
 .LP
 \fBinotiy_add_watch\fR(3C), \fBinotify_rm_watch\fR(3C), \fBinotify\fR(5)

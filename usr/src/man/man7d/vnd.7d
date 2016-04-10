@@ -25,7 +25,6 @@ vnd \- virtual layer two network driver
 .fi
 
 .SH DESCRIPTION
-.sp
 .LP
 The vnd driver provides support for a layer two datapath in an
 analogous way that IP(7P) provides a support for an IP-based layer
@@ -34,12 +33,12 @@ datalink that has been plumbed up with IP via ifconfig(1M) or
 ipadm(1M) cannot be used with vnd or vice-versa.
 .sp
 .LP
-The vnd driver supports and takes advantage of the the following
+The vnd driver supports and takes advantage of the following
 illumos features:
 .RS
 .sp
 .LP
-Supports dld/dls feature negotation of GLDv3 features, such
+Supports dld/dls feature negotiation of GLDv3 features, such
 as direct calls, flow control, checksum offloading, and more.
 .sp
 .LP
@@ -62,7 +61,6 @@ libvnd(3LIB) provides a stable interfaces for using, creating, and
 manipulating vnd devices.
 .sp
 .SH FILES
-.sp
 .ne 2
 .na
 /dev/vnd/ctl
@@ -96,7 +94,6 @@ bar, then the global zone will have the file
 .RE
 
 .SH ATTRIBUTES
-.sp
 .LP
 See attributes(5) for descriptions of the following attributes:
 .sp
@@ -112,7 +109,6 @@ Interface Stability	Evolving
 .TE
 
 .SH SEE ALSO
-.sp
 .LP
 dladm(1M), ipflter(5), libvnd(3LIB), vndadm(1M),
 vndstat(1)

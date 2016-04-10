@@ -99,7 +99,7 @@ main(void)
 		return (1);
 	}
 
-	(void) printf("recieve buffer size is %d bytes\n", vpb.vpb_size);
+	(void) printf("receive buffer size is %d bytes\n", vpb.vpb_size);
 
 	vnd_close(vnd);
 	return (0);
@@ -222,7 +222,6 @@ main(void)
 .fi
 
 .SH ATTRIBUTES
-.sp
 .LP
 See attributes(5) for descriptions of the following attributes:
 

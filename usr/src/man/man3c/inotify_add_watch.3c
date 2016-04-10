@@ -21,26 +21,23 @@ inotify_add_watch \- add a watch to an inotify instance
 .fi
 
 .SH DESCRIPTION
-.sp
 .LP
 The \fBinotify_add_watch()\fR function adds a watch for the file or
-directory specified by \fIpathname\fR to the inotify instance 
+directory specified by \fIpathname\fR to the inotify instance
 specified by \fIfd\fR for the events specified by \fImask\fR.  See
 \fBinotify\fR(5) for details on the meaning of \fImask\fR, how
-it affects the interpretation of \fIpathname\fR, and how 
-events for the watched file or directory are subsequently 
+it affects the interpretation of \fIpathname\fR, and how
+events for the watched file or directory are subsequently
 retrieved via \fBread\fR(2).
 
 .SH RETURN VALUES
-.sp
 .LP
-Upon succesful completion, \fBinotify_add_watch()\fR returns the
+Upon successful completion, \fBinotify_add_watch()\fR returns the
 watch descriptor associated with the new watch.
 If an error occurs, -1 is returned and errno is set to indicate
 the error.
 
 .SH ERRORS
-.sp
 .LP
 \fBinotify_add_watch()\fR will fail if:
 .sp
@@ -77,7 +74,7 @@ The memory associated with \fIpathname\fR was not mapped.
 .ad
 .RS 10n
 The \fIfd\fR argument does not correspond to an
-\fBinotify\fR(5) instance as initialized with 
+\fBinotify\fR(5) instance as initialized with
 \fBinotify_init\fR(3C) or \fBinotify_init1\fR(3C).
 .RE
 
@@ -97,23 +94,21 @@ maximum number of watches per \fBinotify\fR(5) instance.
 \fB\fBENOTDIR\fR\fR
 .ad
 .RS 10n
-\fIpathname\fR does not correspond to a directory and 
+\fIpathname\fR does not correspond to a directory and
 \fBIN_ONLYDIR\fR was specified in \fImask\fR.
 .RE
 
 .sp
 .SH NOTES
-.sp
 .LP
 
 While the \fBinotify\fR(5) facility is implemented for purposes of
 offering compatibility for Linux-borne applications, native
-applications may opt to use it instead of (or in addition to) the 
+applications may opt to use it instead of (or in addition to) the
 \fBPORT_SOURCE_FILE\fR capability of event ports.  See
 \fBinotify\fR(5) for details and restrictions.
 
 .SH SEE ALSO
-.sp
 .LP
 \fBinotify_init\fR(3C), \fBinotify_init1\fR(3C),
 \fBport_create\fR(3C), \fBport_associate\fR(3C), \fBport_get\fR(3C),

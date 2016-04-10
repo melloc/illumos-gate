@@ -27,7 +27,6 @@ vndadm set [-z zonename] device prop=val...
 .fi
 
 .SH DESCRIPTION
-.sp
 .LP
 The vndadm command is used to administer vnd devices. A vnd device is
 similar to an IP network interface, except that the vnd device operates
@@ -50,7 +49,6 @@ of the underlying data link. A given vnd device name must be unique in a
 given zone, but the same name can be used across zones.
 .sp
 .SH OPTIONS
-.sp
 .LP
 All vndadm subcommands have the following common option:
 .sp
@@ -72,7 +70,6 @@ the use of -z applies to all of the devices.
 .RE
 
 .SH SUBCOMMANDS
-.sp
 .ne 2
 .na
 vndadm create [-z zonename] [-l datalink] device
@@ -196,8 +193,8 @@ The name of the zone that the vnd device exists in.
 .ad
 .sp .6
 .RS 4n
-Display the output in a stable machine parseable format. The -o option
-is required with the -p option. See "Parseable Output Format" below.
+Display the output in a stable machine parsable format. The -o option
+is required with the -p option. See "Parsable Output Format" below.
 .RE
 
 .sp
@@ -207,7 +204,7 @@ is required with the -p option. See "Parseable Output Format" below.
 .ad
 .sp .6
 .RS 4n
-Change the delimiter used in conjunction with generating parseable
+Change the delimiter used in conjunction with generating parsable
 output. This option may only be specified when -p is also specified.
 .RE
 
@@ -288,7 +285,7 @@ The value of the property.
 .ad
 .sp .6
 .RS 4n
-Display the output in a stable machine parseable format.  See "Parseable
+Display the output in a stable machine parsable format.  See "Parsable
 Output Format" below.
 .RE
 
@@ -299,7 +296,7 @@ Output Format" below.
 .ad
 .sp .6
 .RS 4n
-Change the delimiter used in conjunction with generating parseable
+Change the delimiter used in conjunction with generating parsable
 output. This option may only be specified when -p is also specified.
 .RE
 
@@ -340,17 +337,15 @@ See OPTIONS above.
 .RE
 .RE
 
-.SS Parseable Output Format
-.sp
+.SS Parsable Output Format
 .LP
-The default output for parseable data is to be separated with a single
+The default output for parsable data is to be separated with a single
 ascii space character. The delimiter may be changed with the -d
-option. When parseable output is requested, no numbers that represent
+option. When parsable output is requested, no numbers that represent
 sizes will be displayed in human readable form, they will be fully
 expanded. eg. the number 42K will instead be 43008.
 
 .SS Properties
-.sp
 .LP
 The following are supported and stable properties. Note that any
 properties that starts with a leading underscore are not a stable
@@ -530,11 +525,11 @@ net0             net0             1b7155a4-aef9-e7f0-d33c-9705e4b8b525
 .sp
 
 .LP
-Example 7 List all devices in a parseable format
+Example 7 List all devices in a parsable format
 .sp
 .LP
 
-To list all devices in a parseable format with the delimiter of ':', run
+To list all devices in a parsable format with the delimiter of ':', run
 the following command:
 
 .sp
@@ -591,11 +586,11 @@ foo0          txbuf            rw    65536
 .sp
 
 .LP
-Example 10 Retrieving properties for a device in a parseable format
+Example 10 Retrieving properties for a device in a parsable format
 .sp
 .LP
 
-To retrieve all properties for the vnd device foo0 in a parseable
+To retrieve all properties for the vnd device foo0 in a parsable
 format, run the following command:
 
 .sp

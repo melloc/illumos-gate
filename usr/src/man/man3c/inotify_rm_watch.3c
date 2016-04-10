@@ -21,7 +21,6 @@ inotify_rm_watch \- remove a watch from an inotify instance
 .fi
 
 .SH DESCRIPTION
-.sp
 .LP
 The \fBinotify_rm_watch()\fR function removes the watch specified
 by \fIwd\fR from the inotify instance associated with \fIfd\fR.
@@ -29,15 +28,13 @@ Removing a watch will induce an \fBIN_IGNORED\fR event; see
 \fBinotify\fR(5) for details.
 
 .SH RETURN VALUES
-.sp
 .LP
-Upon succesful completion, \fBinotify_add_watch()\fR returns the
+Upon successful completion, \fBinotify_add_watch()\fR returns the
 watch descriptor associated with the new watch.
 If an error occurs, -1 is returned and errno is set to indicate
 the error.
 
 .SH ERRORS
-.sp
 .LP
 \fBinotify_rm_watch()\fR will fail if:
 .sp
@@ -56,7 +53,7 @@ The \fIfd\fR argument is not a valid open file descriptor.
 .ad
 .RS 10n
 The \fIfd\fR argument does not correspond to an
-\fBinotify\fR(5) instance as initialized with 
+\fBinotify\fR(5) instance as initialized with
 \fBinotify_init\fR(3C) or \fBinotify_init1\fR(3C), or
 \fIwd\fR is not a valid watch for the specified inotify
 instance.
@@ -64,17 +61,15 @@ instance.
 
 .sp
 .SH NOTES
-.sp
 .LP
 
 While the \fBinotify\fR(5) facility is implemented for purposes of
 offering compatibility for Linux-borne applications, native
-applications may opt to use it instead of (or in addition to) the 
+applications may opt to use it instead of (or in addition to) the
 \fBPORT_SOURCE_FILE\fR capability of event ports.  See
 \fBinotify\fR(5) for details and restrictions.
 
 .SH SEE ALSO
-.sp
 .LP
 \fBinotify_init\fR(3C), \fBinotify_init1\fR(3C),
 \fBport_create\fR(3C), \fBport_associate\fR(3C), \fBport_get\fR(3C),
