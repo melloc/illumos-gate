@@ -1574,6 +1574,8 @@ bltin(Node **a, int n)	/* builtin functions. a[0] is type, a[1] is arg list */
 	int t;
 	char *p, *buf;
 	Node *nextarg;
+	FILE *fp;
+	void flush_all(void);
 
 	t = ptoi(a[0]);
 	x = execute(a[1]);
@@ -1638,6 +1640,15 @@ bltin(Node **a, int n)	/* builtin functions. a[0] is type, a[1] is arg list */
 		(void) setsval(x, buf);
 		free(buf);
 		return (x);
+	case FFLUSH:
+		if (isrec(x) || strlen(getsval(x)) == 0) {
+			flush_all();	/* fflush() or fflush("") -> all */
+			u = 0;
+		} else if ((fp = openfile(FFLUSH, getsval(x))) == NULL)
+			u = EOF;
+		else
+			u = fflush(fp);
+		break;
 	default:	/* can't happen */
 		FATAL("illegal function type %d", t);
 		break;
@@ -1724,8 +1735,13 @@ openfile(int a, const char *s)
 			    (a == APPEND && files[i].mode == GT)) {
 				return (files[i].fp);
 			}
+			if (a == FFLUSH)
+				return (files[i].fp);
 		}
 	}
+	if (a == FFLUSH)	/* didn't find it, so don't create it! */
+		return (NULL);
+
 	for (i = 0; i < FOPEN_MAX; i++) {
 		if (files[i].fp == 0)
 			break;
@@ -1790,7 +1806,8 @@ closefile(Node **a, int n)
 				WARNING("i/o error occurred closing %s",
 				    files[i].fname);
 			}
-			xfree(files[i].fname);
+			if (i > 2)	/* don't do /dev/std... */
+				xfree(files[i].fname);
 			/* watch out for ref thru this */
 			files[i].fname = NULL;
 			files[i].fp = NULL;
@@ -1821,6 +1838,16 @@ closeall(void)
 			}
 		}
 	}
+}
+
+void
+flush_all(void)
+{
+	int i;
+
+	for (i = 0; i < FOPEN_MAX; i++)
+		if (files[i].fp)
+			(void) fflush(files[i].fp);
 }
 
 /*ARGSUSED*/

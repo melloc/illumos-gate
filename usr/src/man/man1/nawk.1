@@ -1316,6 +1316,20 @@ non-zero.
 .sp
 .ne 2
 .na
+\fB\fBfflush(\fR\fIexpression\fR)\fR
+.ad
+.RS 27n
+Flush any buffered output for the file or pipe opened by a \fBprint\fR or
+\fBprintf\fR statement or a call to \fBgetline\fR with the same string-valued
+\fIexpression\fR. If the flush was successful, the function returns \fB0\fR;
+otherwise, it returns \fBEOF\fR. If no arguments or the empty string
+(\fB""\fR) are given, then all open files will be flushed. (Note that
+\fBfflush\fR is supported in \fB/usr/bin/nawk\fR only.)
+.RE
+
+.sp
+.ne 2
+.na
 \fB\fIexpression\fR|\fBgetline\fR[\fIvar\fR]\fR
 .ad
 .RS 27n

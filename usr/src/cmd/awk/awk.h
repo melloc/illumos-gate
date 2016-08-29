@@ -183,6 +183,7 @@ extern char	*qstring(const char *, int);
 #define	FATAN	11
 #define	FTOUPPER 12
 #define	FTOLOWER 13
+#define	FFLUSH	14
 
 /* Node:  parse tree is made of nodes, with Cell's at bottom */
 
