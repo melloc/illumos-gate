@@ -165,7 +165,7 @@ static struct dev_ops ipf_ops = {
 
 static net_instance_t *ipfncb = NULL;
 static ipf_stack_t *ipf_stacks = NULL;
-static kmutex_t ipf_stack_lock;
+static ipfrwlock_t ipf_stack_lock;
 extern struct mod_ops mod_driverops;
 static struct modldrv iplmod = {
 	&mod_driverops, IPL_VERSION, &ipf_ops };
@@ -367,7 +367,7 @@ _init()
 #ifdef	IPFDEBUG
 	cmn_err(CE_NOTE, "IP Filter: _init() = %d", ipfinst);
 #endif
-	mutex_init(&ipf_stack_lock, NULL, MUTEX_DRIVER, NULL);
+	RWLOCK_INIT(&ipf_stack_lock, "ipf stacks list rwlock");
 	return (ipfinst);
 }
 
@@ -468,13 +468,13 @@ ipf_stack_create_one(const netid_t id, const zoneid_t zid, boolean_t from_gz,
 	if (ifs->ifs_zone == GLOBAL_ZONEID)
 		cmn_err(CE_CONT, "!%s, running.\n", ipfilter_version);
 
-	mutex_enter(&ipf_stack_lock);
+	WRITE_ENTER(&ipf_stack_lock);
 	if (ipf_stacks != NULL)
 		ipf_stacks->ifs_pnext = &ifs->ifs_next;
 	ifs->ifs_next = ipf_stacks;
 	ifs->ifs_pnext = &ipf_stacks;
 	ipf_stacks = ifs;
-	mutex_exit(&ipf_stack_lock);
+	RWLOCK_EXIT(&ipf_stack_lock);
 
 	return (ifs);
 }
@@ -544,7 +544,7 @@ ipf_find_stack(const zoneid_t orig_zone, ipf_devstate_t *isp)
 		zone = orig_zone;
 	}
 
-	mutex_enter(&ipf_stack_lock);
+	READ_ENTER(&ipf_stack_lock);
 	for (ifs = ipf_stacks; ifs != NULL; ifs = ifs->ifs_next) {
 		if (ifs->ifs_zone == zone && ifs->ifs_gz_controlled == gz_stack)
 			break;
@@ -553,7 +553,7 @@ ipf_find_stack(const zoneid_t orig_zone, ipf_devstate_t *isp)
 	if (ifs != NULL) {
 		READ_ENTER(&ifs->ifs_ipf_global);
 	}
-	mutex_exit(&ipf_stack_lock);
+	RWLOCK_EXIT(&ipf_stack_lock);
 	return (ifs);
 }
 
@@ -590,11 +590,11 @@ static int ipf_detach_check_all()
 {
 	ipf_stack_t *ifs;
 
-	mutex_enter(&ipf_stack_lock);
+	WRITE_ENTER(&ipf_stack_lock);
 	for (ifs = ipf_stacks; ifs != NULL; ifs = ifs->ifs_next)
 		if (ipf_detach_check_zone(ifs) != 0)
 			break;
-	mutex_exit(&ipf_stack_lock);
+	RWLOCK_EXIT(&ipf_stack_lock);
 	return ((ifs == NULL) ? 0 : -1);
 }
 
@@ -648,11 +648,11 @@ ipf_stack_destroy_one(const netid_t id, ipf_stack_t *ifs)
 	ifs->ifs_fr_timer_id = NULL;
 	RWLOCK_EXIT(&ifs->ifs_ipf_global);
 
-	mutex_enter(&ipf_stack_lock);
+	WRITE_ENTER(&ipf_stack_lock);
 	if (ifs->ifs_next != NULL)
 		ifs->ifs_next->ifs_pnext = ifs->ifs_pnext;
 	*ifs->ifs_pnext = ifs->ifs_next;
-	mutex_exit(&ipf_stack_lock);
+	RWLOCK_EXIT(&ipf_stack_lock);
 
 	if (tid != NULL)
 		(void) untimeout(tid);
