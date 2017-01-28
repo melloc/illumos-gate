@@ -719,6 +719,7 @@ cmd_assign_variable(uintptr_t addr, uint_t flags,
 	else
 		mdb_nv_set_value(v, dot);
 
+	mdb_printf("%llr\n", dot);
 	mdb.m_incr = 0;
 	return (DCMD_OK);
 }
