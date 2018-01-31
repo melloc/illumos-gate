@@ -101,6 +101,12 @@ function x() { function g() {} }
 return not in function
 { return }
 
+break illegal outside
+{ break }
+
+continue illegal outside
+{ continue }
+
 non-terminated string
 { print "abc
 }

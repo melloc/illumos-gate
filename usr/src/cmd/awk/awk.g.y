@@ -59,7 +59,8 @@ int yywrap(void) { return(1); }
 
 Node	*beginloc = NULL;
 Node	*endloc = NULL;
-int	infunc	= 0;	        /* = 1 if in arglist or body of func */
+int	infunc	= 0;		/* = 1 if in arglist or body of func */
+int	inloop	= 0;		/* = 1 if in while, for, do */
 char	*curfname = NULL;	/* current function name */
 Node	*arglist = NULL;	/* list of args for current function */
 static void	setfname(Cell *);
@@ -151,12 +152,12 @@ else:
 	;
 
 for:
-	  FOR '(' opt_simple_stmt ';' pattern ';' opt_simple_stmt rparen stmt
-		{ $$ = stat4(FOR, $3, notnull($5), $7, $9); }
-	| FOR '(' opt_simple_stmt ';'  ';' opt_simple_stmt rparen stmt
-		{ $$ = stat4(FOR, $3, NIL, $6, $8); }
-	| FOR '(' varname IN varname rparen stmt
-		{ $$ = stat3(IN, $3, makearr($5), $7); }
+	  FOR '(' opt_simple_stmt ';' opt_nl pattern ';' opt_nl opt_simple_stmt rparen {inloop++;} stmt
+		{ --inloop; $$ = stat4(FOR, $3, notnull($6), $9, $12); }
+	| FOR '(' opt_simple_stmt ';'  ';' opt_nl opt_simple_stmt rparen {inloop++;} stmt
+		{ --inloop; $$ = stat4(FOR, $3, NIL, $7, $10); }
+	| FOR '(' varname IN varname rparen {inloop++;} stmt
+		{ --inloop; $$ = stat3(IN, $3, makearr($5), $8); }
 	;
 
 funcname:
@@ -204,8 +205,8 @@ pa_pat:
 pa_stat:
 	  pa_pat			{ $$ = stat2(PASTAT, $1, stat2(PRINT, rectonode(), NIL)); }
 	| pa_pat lbrace stmtlist '}'	{ $$ = stat2(PASTAT, $1, $3); }
-	| pa_pat ',' pa_pat		{ $$ = pa2stat($1, $3, stat2(PRINT, rectonode(), NIL)); }
-	| pa_pat ',' pa_pat lbrace stmtlist '}'	{ $$ = pa2stat($1, $3, $5); }
+	| pa_pat ',' opt_nl pa_pat		{ $$ = pa2stat($1, $4, stat2(PRINT, rectonode(), NIL)); }
+	| pa_pat ',' opt_nl pa_pat lbrace stmtlist '}'	{ $$ = pa2stat($1, $4, $6); }
 	| lbrace stmtlist '}'		{ $$ = stat2(PASTAT, NIL, $2); }
 	| XBEGIN lbrace stmtlist '}'
 		{ beginloc = linkum(beginloc, $3); $$ = 0; }
@@ -334,11 +335,13 @@ st:
 	;
 
 stmt:
-	  BREAK st		{ $$ = stat1(BREAK, NIL); }
+	  BREAK st		{ if (!inloop) SYNTAX("break illegal outside of loops");
+				  $$ = stat1(BREAK, NIL); }
 	| CLOSE pattern st	{ $$ = stat1(CLOSE, $2); }
-	| CONTINUE st		{ $$ = stat1(CONTINUE, NIL); }
-	| do stmt WHILE '(' pattern ')' st
-		{ $$ = stat2(DO, $2, notnull($5)); }
+	| CONTINUE st		{  if (!inloop) SYNTAX("continue illegal outside of loops");
+				  $$ = stat1(CONTINUE, NIL); }
+	| do {inloop++;} stmt {--inloop;} WHILE '(' pattern ')' st
+		{ $$ = stat2(DO, $3, notnull($7)); }
 	| EXIT pattern st	{ $$ = stat1(EXIT, $2); }
 	| EXIT st		{ $$ = stat1(EXIT, NIL); }
 	| for
@@ -351,7 +354,7 @@ stmt:
 	| RETURN pattern st	{ $$ = stat1(RETURN, $2); }
 	| RETURN st		{ $$ = stat1(RETURN, NIL); }
 	| simple_stmt st
-	| while stmt		{ $$ = stat2(WHILE, $1, $2); }
+	| while {inloop++;} stmt	{ --inloop; $$ = stat2(WHILE, $1, $3); }
 	| ';' opt_nl		{ $$ = 0; }
 	;
 

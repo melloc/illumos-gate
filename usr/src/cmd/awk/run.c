@@ -202,7 +202,6 @@ program(Node **a, int n)
 		}
 		tempfree(x);
 	}
-loop:
 	if (a[1] || a[2])
 		while (getrec(&record, &recsize) > 0) {
 			x = execute(a[1]);
@@ -215,10 +214,8 @@ ex:
 		goto ex1;
 	if (a[2]) {		/* END */
 		x = execute(a[2]);
-		if (iscont(x))	/* read some more */
-			goto loop;
-		if (isbreak(x) || isnext(x))
-			FATAL("illegal break or next from END");
+		if (isbreak(x) || isnext(x) || iscont(x))
+			FATAL("illegal break, continue, or next from END");
 		tempfree(x);
 	}
 ex1:
