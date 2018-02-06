@@ -66,6 +66,7 @@
 char	*version = "version Oct 11, 1989";
 
 int	dbg	= 0;
+Awkfloat	srand_seed = 1;
 char	*cmdname;	/* gets argv[0] for error messages */
 char	*lexprog;	/* points to program argument if it exists */
 int	compile_time = 2;	/* for error printing: */
@@ -100,6 +101,10 @@ main(int argc, char *argv[], char *envp[])
 		exit(1);
 	}
 	(void) signal(SIGFPE, fpecatch);
+
+	srand_seed = 1;
+	srand((unsigned int)srand_seed);
+
 	yyin = NULL;
 	syminit();
 	while (argc > 1 && argv[1][0] == '-' && argv[1][1] != '\0') {

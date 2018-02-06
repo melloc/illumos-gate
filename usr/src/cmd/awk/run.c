@@ -62,6 +62,7 @@
 #define	tempfree(x)	if (istemp(x)) tfree(x)
 
 static jmp_buf env;
+extern	Awkfloat	srand_seed;
 
 static	Cell	*execute(Node *);
 static	Cell	*gettemp(void), *copycell(Cell *);
@@ -1633,6 +1634,7 @@ bltin(Node **a, int n)	/* builtin functions. a[0] is type, a[1] is arg list */
 	Cell *x, *y;
 	Awkfloat u;
 	int t;
+	Awkfloat tmp;
 	char *p, *buf;
 	Node *nextarg;
 	FILE *fp;
@@ -1688,7 +1690,10 @@ bltin(Node **a, int n)	/* builtin functions. a[0] is type, a[1] is arg list */
 			u = time((time_t *)0);
 		else
 			u = getfval(x);
-		srand((int)u); u = (int)u;
+		tmp = u;
+		srand((unsigned int) u);
+		u = srand_seed;
+		srand_seed = tmp;
 		break;
 	case FTOUPPER:
 	case FTOLOWER:
