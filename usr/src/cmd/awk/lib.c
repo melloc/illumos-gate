@@ -758,65 +758,19 @@ isclvar(const char *s)	/* is s of form var=something ? */
 	return (0);
 }
 
-#define	MAXEXPON	38	/* maximum exponent for fp number */
-
+#include <math.h>
 int
 is_number(const char *s)
 {
-	int d1, d2;
-	int point;
-	const char *es;
-	extern char	radixpoint;
-
-	d1 = d2 = point = 0;
-	while (*s == ' ' || *s == '\t' || *s == '\n')
-		s++;
-	if (*s == '\0')
-		return (0);	/* empty stuff isn't number */
-	if (*s == '+' || *s == '-')
-		s++;
-	if (!isdigit(*s) && *s != radixpoint)
+	double r;
+	char *ep;
+	errno = 0;
+	r = strtod(s, &ep);
+	if (ep == s || r == HUGE_VAL || errno == ERANGE)
 		return (0);
-	if (isdigit(*s)) {
-		do {
-			d1++;
-			s++;
-		} while (isdigit(*s));
-	}
-	if (d1 >= MAXEXPON)
-		return (0);	/* too many digits to convert */
-	if (*s == radixpoint) {
-		point++;
-		s++;
-	}
-	if (isdigit(*s)) {
-		d2++;
-		do {
-			s++;
-		} while (isdigit(*s));
-	}
-	if (!(d1 || point && d2))
-		return (0);
-	if (*s == 'e' || *s == 'E') {
-		s++;
-		if (*s == '+' || *s == '-')
-			s++;
-		if (!isdigit(*s))
-			return (0);
-		es = s;
-		do {
-			s++;
-		} while (isdigit(*s));
-		if (s - es > 2) {
-			return (0);
-		} else if (s - es == 2 &&
-		    (int)(10 * (*es-'0') + *(es+1)-'0') >= MAXEXPON) {
-			return (0);
-		}
-	}
-	while (*s == ' ' || *s == '\t' || *s == '\n')
-		s++;
-	if (*s == '\0')
+	while (*ep == ' ' || *ep == '\t' || *ep == '\n')
+		ep++;
+	if (*ep == '\0')
 		return (1);
 	else
 		return (0);

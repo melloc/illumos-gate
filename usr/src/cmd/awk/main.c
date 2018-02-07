@@ -70,7 +70,6 @@ char	*cmdname;	/* gets argv[0] for error messages */
 char	*lexprog;	/* points to program argument if it exists */
 int	compile_time = 2;	/* for error printing: */
 				/* 2 = cmdline, 1 = compile, 0 = running */
-char	radixpoint = '.';
 
 static char	**pfile = NULL;	/* program filenames from -f's */
 static int	npfile = 0;	/* number of filenames */
@@ -82,7 +81,6 @@ int
 main(int argc, char *argv[], char *envp[])
 {
 	const char *fs = NULL;
-	char	*nl_radix;
 	/*
 	 * At this point, numbers are still scanned as in
 	 * the POSIX locale.
@@ -191,9 +189,6 @@ main(int argc, char *argv[], char *envp[])
 	 * done parsing, so now activate the LC_NUMERIC
 	 */
 	(void) setlocale(LC_ALL, "");
-	nl_radix = nl_langinfo(RADIXCHAR);
-	if (nl_radix)
-		radixpoint = *nl_radix;
 
 	if (errorflag == 0) {
 		compile_time = 0;

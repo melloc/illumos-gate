@@ -352,7 +352,6 @@ extern	void	r_expand_buf(char **, size_t *, size_t);
 extern	int	dbg;
 extern	char	*lexprog;
 extern	int	compile_time;
-extern	char	radixpoint;
 extern	char	*cursource(void);
 extern	int	pgetc(void);
 
