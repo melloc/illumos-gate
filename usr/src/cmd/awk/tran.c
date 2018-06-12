@@ -282,7 +282,7 @@ setsymtab(const char *n, const char *s, Awkfloat f, unsigned int t, Array *tp)
 	p->fval = f;
 	p->tval = t;
 	p->csub = CUNK;
-
+	p->ctype = OCELL;
 	tp->nelem++;
 	if (tp->nelem > FULLTAB * tp->size)
 		rehash(tp);
