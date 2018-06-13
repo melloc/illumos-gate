@@ -1040,10 +1040,14 @@ awkprintf(Node **a, int n)		/* printf */
 	tempfree(x);
 	if (a[1] == NULL) {
 		(void) fputs(buf, stdout);
+		if (ferror(stdout))
+			FATAL("write error on stdout");
 	} else {
 		fp = redirect(ptoi(a[1]), a[2]);
 		(void) fputs(buf, fp);
 		(void) fflush(fp);
+		if (ferror(fp))
+			FATAL("write error on %s", filename(fp));
 	}
 	free(buf);
 	return (True);
@@ -1674,6 +1678,8 @@ printstat(Node **a, int n)	/* print a[0] */
 	}
 	if (a[1] != NULL)
 		(void) fflush(fp);
+	if (ferror(fp))
+		FATAL("write error on %s", filename(fp));
 	return (True);
 }
 
@@ -1750,6 +1756,17 @@ openfile(int a, const char *s)
 		files[i].mode = m;
 	}
 	return (fp);
+}
+
+const char *
+filename(FILE *fp)
+{
+	int i;
+
+	for (i = 0; i < FOPEN_MAX; i++)
+		if (fp == files[i].fp)
+			return (files[i].fname);
+	return ("???");
 }
 
 /*ARGSUSED*/
