@@ -889,6 +889,8 @@ sindex(Node **a, int nnn)		/* index(a[0], a[1]) */
 	return (z);
 }
 
+#define	MAXNUMSIZE	50
+
 /* printf-like conversions */
 int
 format(char **pbuf, int *pbufsize, const char *s, Node *a)
@@ -896,7 +898,8 @@ format(char **pbuf, int *pbufsize, const char *s, Node *a)
 	char *fmt;
 	const char *os;
 	Cell *x;
-	int flag = 0, len;
+	int flag = 0, n, len;
+	int fmtwd; /* format width */
 	char *buf = *pbuf;
 	size_t bufsize = *pbufsize;
 	size_t fmtsz = recsize;
@@ -918,6 +921,13 @@ format(char **pbuf, int *pbufsize, const char *s, Node *a)
 			s += 2;
 			continue;
 		}
+		/*
+		 * have to be real careful in case this is a huge number,
+		 * eg, "%100000d".
+		 */
+		fmtwd = atoi(s+1);
+		if (fmtwd < 0)
+			fmtwd = -fmtwd;
 		for (tcnt = 0; ; s++) {
 			expand_buf(&fmt, &fmtsz, tcnt);
 			fmt[tcnt++] = *s;
@@ -935,13 +945,17 @@ format(char **pbuf, int *pbufsize, const char *s, Node *a)
 				a = a->nnext;
 				tcnt--;
 				expand_buf(&fmt, &fmtsz, tcnt + 12);
-				ret = sprintf(&fmt[tcnt], "%d",
-				    (int)getfval(x));
+				fmtwd = (int)getfval(x);
+				ret = sprintf(&fmt[tcnt], "%d", fmtwd);
+				if (fmtwd < 0)
+					fmtwd = -fmtwd;
 				tcnt += ret;
 				tempfree(x);
 			}
 		}
 		fmt[tcnt] = '\0';
+		if (fmtwd < 0)
+			fmtwd = -fmtwd;
 
 		switch (*s) {
 		case 'f': case 'e': case 'g': case 'E': case 'G':
@@ -984,56 +998,62 @@ format(char **pbuf, int *pbufsize, const char *s, Node *a)
 		}
 		x = execute(a);
 		a = a->nnext;
-		for (;;) {
-			/* make sure we have at least 1 byte space */
-			expand_buf(&buf, &bufsize, cnt + 1);
-			len = bufsize - cnt;
-			switch (flag) {
-			case 'f':
+		n = MAXNUMSIZE;
+		if (fmtwd > n)
+			n = fmtwd;
+retry:
+		/* make sure we have at least 1 byte space */
+		(void) adjbuf(&buf, &bufsize, 1 + n + cnt,
+		    recsize, NULL, "format5");
+		len = bufsize - cnt;
+		switch (flag) {
+		case 'f':
+			/*LINTED*/
+			ret = snprintf(&buf[cnt], len,
+			    fmt, getfval(x));
+			break;
+		case 'd':
+			/*LINTED*/
+			ret = snprintf(&buf[cnt], len,
+			    fmt, (long)getfval(x));
+			break;
+		case 'u':
+			/*LINTED*/
+			ret = snprintf(&buf[cnt], len,
+			    fmt, (int)getfval(x));
+			break;
+		case 's':
+			/*LINTED*/
+			ret = snprintf(&buf[cnt], len,
+			    fmt, getsval(x));
+			break;
+		case 'c':
+			if (!isnum(x)) {
 				/*LINTED*/
 				ret = snprintf(&buf[cnt], len,
-				    fmt, getfval(x));
+				    fmt, getsval(x)[0]);
 				break;
-			case 'd':
-				/*LINTED*/
-				ret = snprintf(&buf[cnt], len,
-				    fmt, (long)getfval(x));
-				break;
-			case 'u':
+			}
+			if (getfval(x)) {
 				/*LINTED*/
 				ret = snprintf(&buf[cnt], len,
 				    fmt, (int)getfval(x));
-				break;
-			case 's':
-				/*LINTED*/
-				ret = snprintf(&buf[cnt], len,
-				    fmt, getsval(x));
-				break;
-			case 'c':
-				if (!isnum(x)) {
-					/*LINTED*/
-					ret = snprintf(&buf[cnt], len,
-					    fmt, getsval(x)[0]);
-					break;
-				}
-				if (getfval(x)) {
-					/*LINTED*/
-					ret = snprintf(&buf[cnt], len,
-					    fmt, (int)getfval(x));
-				} else {
-					/* explicit null byte */
-					buf[cnt] = '\0';
-					/* next output will start here */
-					buf[cnt + 1] = '\0';
-					ret = 1;
-				}
-				break;
-			default:
-				ret = 0;
+			} else {
+				/* explicit null byte */
+				buf[cnt] = '\0';
+				/* next output will start here */
+				buf[cnt + 1] = '\0';
+				ret = 1;
 			}
-			if (ret < len)
-				break;
-			expand_buf(&buf, &bufsize, cnt + ret);
+			break;
+		default:
+			FATAL("can't happen: "
+			    "bad conversion %c in format()", flag);
+		}
+		if (ret >= len) {
+			(void) adjbuf(&buf, &bufsize, cnt + ret,
+			    recsize, NULL, "format6");
+			goto retry;
 		}
 		tempfree(x);
 		cnt += ret;
