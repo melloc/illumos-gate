@@ -912,10 +912,10 @@ format(char **bufp, char *s, Node *a)
 
 		switch (*s) {
 		case 'f': case 'e': case 'g': case 'E': case 'G':
-			flag = 1;
+			flag = 'f';
 			break;
 		case 'd': case 'i':
-			flag = 2;
+			flag = 'd';
 			if (*(s-1) == 'l')
 				break;
 			fmt[tcnt - 1] = 'l';
@@ -924,19 +924,20 @@ format(char **bufp, char *s, Node *a)
 			fmt[tcnt] = '\0';
 			break;
 		case 'o': case 'x': case 'X': case 'u':
-			flag = *(s-1) == 'l' ? 2 : 3;
+			flag = *(s-1) == 'l' ? 'd' : 'u';
 			break;
 		case 's':
-			flag = 4;
+			flag = 's';
 			break;
 		case 'c':
-			flag = 5;
+			flag = 'c';
 			break;
 		default:
-			flag = 0;
+			WARNING("weird printf conversion %s", fmt);
+			flag = '?';
 			break;
 		}
-		if (flag == 0) {
+		if (flag == '?') {
 			len = strlen(fmt);
 			expand_buf(&buf, &bufsize, cnt + len);
 			(void) memcpy(&buf[cnt], fmt, len);
@@ -955,27 +956,27 @@ format(char **bufp, char *s, Node *a)
 			expand_buf(&buf, &bufsize, cnt + 1);
 			len = bufsize - cnt;
 			switch (flag) {
-			case 1:
+			case 'f':
 				/*LINTED*/
 				ret = snprintf(&buf[cnt], len,
 				    fmt, getfval(x));
 				break;
-			case 2:
+			case 'd':
 				/*LINTED*/
 				ret = snprintf(&buf[cnt], len,
 				    fmt, (long)getfval(x));
 				break;
-			case 3:
+			case 'u':
 				/*LINTED*/
 				ret = snprintf(&buf[cnt], len,
 				    fmt, (int)getfval(x));
 				break;
-			case 4:
+			case 's':
 				/*LINTED*/
 				ret = snprintf(&buf[cnt], len,
 				    fmt, getsval(x));
 				break;
-			case 5:
+			case 'c':
 				if (isnum(x)) {
 					/*LINTED*/
 					ret = snprintf(&buf[cnt], len,
