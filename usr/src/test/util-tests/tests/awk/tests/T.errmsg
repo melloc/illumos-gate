@@ -39,6 +39,9 @@ $1 ~ /^#/ {
 illegal primary in regular expression
 /(/
 
+duplicate argument
+function f(i,j,i) { return i }
+
 nonterminated character class
 /[[/
 

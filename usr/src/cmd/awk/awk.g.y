@@ -55,6 +55,8 @@
 
 %{
 #include "awk.h"
+
+void checkdup(Node *list, Cell *item);
 int yywrap(void) { return(1); }
 
 Node	*beginloc = NULL;
@@ -444,7 +446,9 @@ var:
 varlist:
 	  /* nothing */		{ arglist = $$ = 0; }
 	| VAR			{ arglist = $$ = celltonode($1,CVAR); }
-	| varlist comma VAR	{ arglist = $$ = linkum($1,celltonode($3,CVAR)); }
+	| varlist comma VAR	{
+			checkdup($1, $3);
+			arglist = $$ = linkum($1,celltonode($3,CVAR)); }
 	;
 
 varname:
@@ -491,5 +495,17 @@ notnull(Node *n)
 		return n;
 	default:
 		return op2(NE, n, nullnode);
+	}
+}
+
+void
+checkdup(Node *vl, Cell *cp)	/* check if name already in list */
+{
+	char *s = cp->nval;
+	for (; vl; vl = vl->nnext) {
+		if (strcmp(s, ((Cell *)(vl->narg[0]))->nval) == 0) {
+			SYNTAX("duplicate argument %s", s);
+			break;
+		}
 	}
 }
