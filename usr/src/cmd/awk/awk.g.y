@@ -472,6 +472,7 @@ setfname(Cell *p)
 	else if (isfcn(p))
 		SYNTAX("you can't define function %s more than once", p->nval);
 	curfname = p->nval;
+	p->tval |= FCN;
 }
 
 static int
