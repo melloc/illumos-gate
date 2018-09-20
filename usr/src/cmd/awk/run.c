@@ -232,7 +232,7 @@ struct Frame {	/* stack frame for awk function calls */
 	Cell *retval;	/* return value */
 };
 
-#define	NARGS	30	/* max args in a call */
+#define	NARGS	50	/* max args in a call */
 
 struct Frame *frame = NULL;	/* base of stack frames; dynamically alloc'd */
 int	nframe = 0;		/* number of frames allocated */
@@ -324,6 +324,7 @@ call(Node **a, int n)	/* function call.  very kludgy and fragile */
 				if (i >= ncall) {
 					freesymtab(t);
 					t->csub = CTEMP;
+					tempfree(t);
 				} else {
 					oargs[i]->tval = t->tval;
 					oargs[i]->tval &= ~(STR|NUM|DONTFREE);
@@ -331,10 +332,13 @@ call(Node **a, int n)	/* function call.  very kludgy and fragile */
 					tempfree(t);
 				}
 			}
-		} else {
+		} else if (t != y) {	/* kludge to prevent freeing twice */
 			t->csub = CTEMP;
 			tempfree(t);
-			if (t == y) freed = 1;
+		} else if (t == y && t->csub == CCOPY) {
+			t->csub = CTEMP;
+			tempfree(t);
+			freed = 1;
 		}
 	}
 	tempfree(fcn);
@@ -357,8 +361,9 @@ copycell(Cell *x)	/* make a copy of a cell in a temp */
 
 	y = gettemp();
 	y->csub = CCOPY;	/* prevents freeing until call is over */
-	y->nval = x->nval;
-	y->sval = x->sval ? tostring(x->sval) : NULL;
+	y->nval = x->nval;	/* BUG? */
+	if (isstr(x))
+		y->sval = tostring(x->sval);
 	y->fval = x->fval;
 	/* copy is not constant or field is DONTFREE right? */
 	y->tval = x->tval & ~(CON|FLD|REC|DONTFREE);
