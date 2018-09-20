@@ -433,9 +433,10 @@ r_getfval(Cell *vp)	/* get float val of a Cell */
 }
 
 char *
-r_getsval(Cell *vp)
+r_getsval(Cell *vp)	/* get string val of a Cell */
 {
 	char s[256];
+	double dtemp;
 
 	if ((vp->tval & (NUM | STR)) == 0)
 		funnyvar(vp, "read value of");
@@ -446,13 +447,13 @@ r_getsval(Cell *vp)
 	if (isstr(vp) == 0) {
 		if (freeable(vp))
 			xfree(vp->sval);
-		if ((long long)vp->fval == vp->fval) {
+		if (modf(vp->fval, &dtemp) == 0) {	/* it's integral */
 			(void) snprintf(s, sizeof (s),
-			    "%.20g", vp->fval);
+			    "%.30g", vp->fval);
 		} else {
 			/*LINTED*/
 			(void) snprintf(s, sizeof (s),
-			    (char *)*OFMT, vp->fval);
+			    *OFMT, vp->fval);
 		}
 		vp->sval = tostring(s);
 		vp->tval &= ~DONTFREE;
