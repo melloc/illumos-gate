@@ -214,7 +214,8 @@ pgetc(void)		/* get 1 character from awk program */
 		}
 		if ((c = getc(yyin)) != EOF)
 			return (c);
-		(void) fclose(yyin);
+		if (yyin != stdin)
+			(void) fclose(yyin);
 		yyin = NULL;
 		curpfile++;
 	}
