@@ -92,6 +92,18 @@ $AWK 'BEGIN	{ FILENAME = "/etc/passwd" }
 	{ print $0 }' >/dev/null
 if [[ $? -eq 139 ]]; then fail "BAD: T.misc /etc/passwd dropped core"; fi
 
+echo hello |
+$AWK '  function foo(foo) {
+                foo = 1
+                foo()
+        }
+	{ foo(bar) }
+' >/dev/null 2>&1
+if [[ $? -eq 139 ]]; then
+	fail "BAD: T.misc function foo(foo) dropped core"
+	rm -f core
+fi
+
 echo '2
 10' |
 $AWK '{ x[NR] = $0 }	# test whether $0 is NUM as well as STR

@@ -285,6 +285,10 @@ defn(Cell *v, Node *vl, Node *st)
 		SYNTAX("`%s' is an array name and a function name", v->nval);
 		return;
 	}
+	if (isarg(v->nval) != -1) {
+		SYNTAX("`%s' is both function name and argument name", v->nval);
+		return;
+	}
 
 	v->tval = FCN;
 	v->sval = (char *)st;
