@@ -960,6 +960,9 @@ format(char **pbuf, int *pbufsize, const char *s, Node *a)
 			fmtwd = -fmtwd;
 
 		switch (*s) {
+		case 'a': case 'A':
+			flag = *s;
+			break;
 		case 'f': case 'e': case 'g': case 'E': case 'G':
 			flag = 'f';
 			break;
@@ -1009,6 +1012,8 @@ retry:
 		    recsize, NULL, "format5");
 		len = bufsize - cnt;
 		switch (flag) {
+		case 'a':
+		case 'A':
 		case 'f':
 			/*LINTED*/
 			ret = snprintf(&buf[cnt], len,
