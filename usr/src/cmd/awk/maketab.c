@@ -91,6 +91,7 @@ struct xx {
 	{ DIVIDE, "arith", " / " },
 	{ MOD, "arith", " % " },
 	{ UMINUS, "arith", " -" },
+	{ UPLUS, "arith", " +" },
 	{ POWER, "arith", " **" },
 	{ PREINCR, "incrdecr", "++" },
 	{ POSTINCR, "incrdecr", "++" },
