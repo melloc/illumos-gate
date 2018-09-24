@@ -56,6 +56,7 @@
 #include	<setjmp.h>
 #include	<math.h>
 #include	<time.h>
+#include	<sys/wait.h>
 #include	"awk.h"
 #include	"y.tab.h"
 
@@ -1686,6 +1687,7 @@ bltin(Node **a, int n)	/* builtin functions. a[0] is type, a[1] is arg list */
 	Node *nextarg;
 	FILE *fp;
 	void flush_all(void);
+	int status = 0;
 
 	t = ptoi(a[0]);
 	x = execute(a[1]);
@@ -1725,8 +1727,18 @@ bltin(Node **a, int n)	/* builtin functions. a[0] is type, a[1] is arg list */
 	case FSYSTEM:
 		/* in case something is buffered already */
 		(void) fflush(stdout);
-		/* 256 is unix-dep */
-		u = (Awkfloat)system(getsval(x)) / 256;
+		status = system(getsval(x));
+		u = status;
+		if (status != -1) {
+			if (WIFEXITED(status)) {
+				u = WEXITSTATUS(status);
+			} else if (WIFSIGNALED(status)) {
+				u = WTERMSIG(status) + 256;
+				if (WCOREDUMP(status))
+					u += 256;
+			} else	/* something else?!? */
+				u = 0;
+		}
 		break;
 	case FRAND:
 		/* in principle, rand() returns something in 0..RAND_MAX */
