@@ -938,6 +938,9 @@ format(char **pbuf, int *pbufsize, const char *s, Node *a)
 			if (isalpha((uschar)*s) &&
 			    *s != 'l' && *s != 'h' && *s != 'L')
 				break;	/* the ansi panoply */
+			if (*s == '$') {
+				FATAL("'$' not permitted in awk formats");
+			}
 			if (*s == '*') {
 				if (a == NULL) {
 					FATAL("not enough args in printf(%s) "
