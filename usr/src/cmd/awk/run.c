@@ -70,7 +70,6 @@ static	Cell	*gettemp(void), *copycell(Cell *);
 static	FILE	*openfile(int, const char *), *redirect(int, Node *);
 
 Node	*winner = NULL;		/* root of parse tree */
-
 static Cell	*tmps;		/* free temporary cells for execution */
 
 static Cell	truecell	= { OBOOL, BTRUE, NULL, NULL, 1.0, NUM, NULL };
@@ -362,14 +361,18 @@ copycell(Cell *x)	/* make a copy of a cell in a temp */
 {
 	Cell *y;
 
+	/* copy is not constant or field */
+
 	y = gettemp();
+	y->tval = x->tval & ~(CON|FLD|REC);
 	y->csub = CCOPY;	/* prevents freeing until call is over */
 	y->nval = x->nval;	/* BUG? */
-	if (isstr(x))
+	if (isstr(x)) {
 		y->sval = tostring(x->sval);
+		y->tval &= ~DONTFREE;
+	} else
+		y->tval |= DONTFREE;
 	y->fval = x->fval;
-	/* copy is not constant or field is DONTFREE right? */
-	y->tval = x->tval & ~(CON|FLD|REC|DONTFREE);
 	return (y);
 }
 

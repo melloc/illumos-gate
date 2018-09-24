@@ -363,6 +363,7 @@ setfval(Cell *vp, Awkfloat f)	/* set float val of a Cell */
 {
 	int fldno;
 
+	f += 0.0;		/* normalise negative zero to positive zero */
 	if ((vp->tval & (NUM | STR)) == 0)
 		funnyvar(vp, "assign to");
 	if (isfld(vp)) {
@@ -429,7 +430,7 @@ setsval(Cell *vp, const char *s)	/* set string val of a Cell */
 		if (donerec == 0)
 			recbld();
 	}
-	t = tostring(s);	/* in case it's self-assign */
+	t = s ? tostring(s) : tostring("");	/* in case it's self-assign */
 	if (freeable(vp))
 		xfree(vp->sval);
 	vp->tval &= ~(NUM|CONVC|CONVO);
