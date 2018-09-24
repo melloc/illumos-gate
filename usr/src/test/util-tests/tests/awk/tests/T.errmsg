@@ -207,6 +207,12 @@ BEGIN { length("abc", "def") }
 calling undefined function foo
 BEGIN { foo() }
 
+cannot delete SYMTAB or its elements
+BEGIN { delete SYMTAB }
+
+cannot delete SYMTAB or its elements
+BEGIN { delete SYMTAB["OFS"] }
+
 # I am pretty certain that this test is _meant_ to fail,
 # to allow checking whether anything is happening. Uncomment
 # below to check whether the script then fails:

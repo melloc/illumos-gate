@@ -559,6 +559,9 @@ awkdelete(Node **a, int n)	/* a[0] is symtab, a[1] is list of subscripts */
 	size_t tlen = 0, len;
 
 	x = execute(a[0]);	/* Cell* for symbol table */
+	if (x == symtabloc) {
+		FATAL("cannot delete SYMTAB or its elements");
+	}
 	if (!isarr(x)) {
 		dprintf(("making %s into an array\n", x->nval));
 		if (freeable(x))
