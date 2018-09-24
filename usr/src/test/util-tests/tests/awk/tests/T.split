@@ -97,4 +97,13 @@ echo '0
 3' > $TEMP2
 diff $TEMP1 $TEMP2 || fail 'BAD: T.split null 3rd arg'
 
+$AWK 'BEGIN {
+  a = "cat\n\n\ndog";
+  split(a, b, "[\r\n]+");
+  print b[1], b[2];
+}' > $TEMP1
+echo 'cat dog' > $TEMP2
+diff $TEMP1 $TEMP2 || fail 'BAD: T.split(a, b, "[\r\n]+")'
+
+
 exit $RESULT

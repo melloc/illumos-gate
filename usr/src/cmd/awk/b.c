@@ -869,9 +869,6 @@ relex(void)		/* lexical analyzer for reparse */
 					return (CCL);
 				else
 					return (NCCL);
-			} else if (c == '\n') {
-				FATAL("newline in character class %s...",
-				    lastre);
 			} else
 				*bp++ = c;
 		}
