@@ -1604,7 +1604,12 @@ instat(Node **a, int n)	/* for (a[0] in a[1]) a[2] */
 	vp = execute(a[0]);
 	arrayp = execute(a[1]);
 	if (!isarr(arrayp)) {
-		FATAL("%s is not an array", arrayp->nval);
+		dprintf(("making %s into an array\n", arrayp->nval));
+		if (freeable(arrayp))
+			xfree(arrayp->sval);
+		arrayp->tval &= ~(STR|NUM|DONTFREE);
+		arrayp->tval |= ARR;
+		arrayp->sval = (char *)makesymtab(NSYMTAB);
 	}
 	/*LINTED align*/
 	tp = (Array *)arrayp->sval;
