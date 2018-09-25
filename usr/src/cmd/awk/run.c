@@ -1362,18 +1362,20 @@ split(Node **a, int nnn)	/* split(a[0], a[1], a[2]); a[3] is type */
 {
 	Cell *x = NULL, *y, *ap;
 	char *s, *origs;
+	char *fs, *origfs = NULL;
 	int sep;
-	char *t, temp, num[50], *fs = NULL;
+	char *t, temp, num[50];
 	int n, tempstat, arg3type;
 
 	y = execute(a[0]);	/* source string */
 	origs = s = strdup(getsval(y));
 	arg3type = ptoi(a[3]);
 	if (a[2] == NULL)		/* fs string */
-		fs = *FS;
+		origs = fs = strdup(getsval(fsloc));
 	else if (arg3type == STRING) {	/* split(str,arr,"string") */
 		x = execute(a[2]);
-		fs = getsval(x);
+		origfs = fs = strdup(getsval(x));
+		tempfree(x);
 	} else if (arg3type == REGEXPR)
 		fs = "(regexpr)";	/* split(str,arr,/regexpr/) */
 	else
@@ -1522,9 +1524,7 @@ spdone:
 	tempfree(ap);
 	tempfree(y);
 	free(origs);
-	if (a[2] != NULL && arg3type == STRING) {
-		tempfree(x);
-	}
+	free(origfs);
 	x = gettemp();
 	x->tval = NUM;
 	x->fval = n;

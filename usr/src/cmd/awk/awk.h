@@ -142,6 +142,7 @@ extern Cell	*lookup(const char *, Array *);
 extern Cell	*recloc;	/* location of input record */
 extern Cell	*nrloc;		/* NR */
 extern Cell	*fnrloc;	/* FNR */
+extern Cell	*fsloc;		/* FS */
 extern Cell	*nfloc;		/* NF */
 extern Cell	*rstartloc;	/* RSTART */
 extern Cell	*rlengthloc;	/* RLENGTH */
