@@ -53,6 +53,7 @@
 #ifndef AWK_H
 #define	AWK_H
 
+#include <assert.h>
 #include <sys/types.h>
 #include <ctype.h>
 #include <stdio.h>
@@ -152,7 +153,6 @@ extern Cell	*rlengthloc;	/* RLENGTH */
 #define	FLD	0100	/* this is a field $1, $2, ... */
 #define	REC	0200	/* this is $0 */
 
-#define	freeable(p)	(!((p)->tval & DONTFREE))
 
 extern Awkfloat	setfval(Cell *, Awkfloat);
 extern Awkfloat	getfval(Cell *);
@@ -266,13 +266,22 @@ extern	Node	*makearr(Node *);
 #define	isfcn(n)	((n)->tval & FCN)
 #define	istrue(n)	((n)->csub == BTRUE)
 #define	istemp(n)	((n)->csub == CTEMP)
+#define	freeable(p)	(((p)->tval & (STR|DONTFREE)) == STR)
 
-#define	NCHARS	(256+1)
+/* structures used by regular expression matching machinery, mostly b.c: */
+
+/* 256 handles 8-bit chars; 128 does 7-bit */
+/* watch out in match(), etc. */
+#define	NCHARS	(256+3)
 #define	NSTATES	32
 
 typedef struct rrow {
-	int	ltype;
-	int	lval;
+	long	ltype;	/* long avoids pointer warnings on 64-bit */
+	union {
+		int i;
+		Node *np;
+		uschar *up;
+	} lval;		/* because Al stores a pointer in it! */
 	int	*lfollow;
 } rrow;
 
@@ -361,6 +370,7 @@ extern	Awkfloat *ARGC;
 
 /* run.c */
 extern	void		run(Node *);
+extern	const char	*filename(FILE *);
 extern	int		adjbuf(char **pb, size_t *sz, size_t min, size_t q,
 			    char **pbp, const char *what);
 
