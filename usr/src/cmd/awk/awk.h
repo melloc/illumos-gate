@@ -85,6 +85,8 @@ extern int	safe;		/* 0 => unsafe, 1 => safe */
 
 #define	FLD_INCR	64
 #define	LINE_INCR	256
+#define	RECSIZE	(8 * 1024)	/* sets limit on records, fields, etc., etc. */
+extern size_t	recsize;	/* size of current record, orig RECSIZE */
 
 /* ensure that there is extra 1 byte in the buffer */
 #define	expand_buf(p, n, r)	\
@@ -337,16 +339,17 @@ extern	void	syminit(void);
 extern	void	yyerror(const char *);
 extern	void	fldbld(void);
 extern	void	recbld(void);
-extern	int	getrec(char **, size_t *);
+extern	int	getrec(char **, size_t *, int);
 extern	Cell	*fieldadr(int);
 extern	void	newfld(int);
-extern	Cell	*getfld(int);
 extern	int	fldidx(Cell *);
 extern	double	errcheck(double, const char *);
 extern	void	fpecatch(int);
 extern	void	init_buf(char **, size_t *, size_t);
 extern	void	adjust_buf(char **, size_t);
 extern	void	r_expand_buf(char **, size_t *, size_t);
+extern	void	makefields(int, int);
+extern	void	growfldtab(int n);
 
 /* main.c */
 extern	int	dbg;

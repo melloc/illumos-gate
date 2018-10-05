@@ -221,7 +221,8 @@ celltonode(Cell *a, int b)
 Node *
 rectonode(void)	/* make $0 into a Node */
 {
-	return (celltonode(recloc, CFLD));
+	extern Cell *literal0;
+	return (op1(INDIRECT, celltonode(literal0, CUNK)));
 }
 
 Node *

@@ -81,6 +81,7 @@ Awkfloat *RSTART;	/* start of re matched with ~; origin 1 (!) */
 Awkfloat *RLENGTH;	/* length of same */
 
 Cell	*recloc;	/* location of record */
+Cell	*fsloc;		/* FS */
 Cell	*nrloc;		/* NR */
 Cell	*nfloc;		/* NF */
 Cell	*fnrloc;	/* FNR */
@@ -92,6 +93,7 @@ Cell	*symtabloc;	/* SYMTAB */
 
 Cell	*nullloc;	/* a guaranteed empty cell */
 Node	*nullnode;	/* zero&null, converted into a node for comparisons */
+Cell	*literal0;
 
 static	void	rehash(Array *);
 
@@ -101,21 +103,19 @@ syminit(void)	/* initialize symbol table with builtin vars */
 	init_buf(&record, &recsize, LINE_INCR);
 
 	/* initialize $0 */
-	recloc = getfld(0);
+	recloc = fieldadr(0);
 	recloc->nval = "$0";
 	recloc->sval = record;
 	recloc->tval = REC|STR|DONTFREE;
 
-	symtab = makesymtab(NSYMTAB);
-	(void) setsymtab("0", "0", 0.0,
-	    NUM|STR|CON|DONTFREE, symtab);
+	literal0 = setsymtab("0", "0", 0.0, NUM|STR|CON|DONTFREE, symtab);
 	/* this is used for if(x)... tests: */
 	nullloc = setsymtab("$zero&null", "", 0.0,
 	    NUM|STR|CON|DONTFREE, symtab);
 	nullnode = celltonode(nullloc, CCON);
 
-	FS = &setsymtab("FS", " ", 0.0,
-	    STR|DONTFREE, symtab)->sval;
+	fsloc = setsymtab("FS", " ", 0.0, STR|DONTFREE, symtab);
+	FS = &fsloc->sval;
 	RS = &setsymtab("RS", "\n", 0.0,
 	    STR|DONTFREE, symtab)->sval;
 	OFS = &setsymtab("OFS", " ", 0.0, STR|DONTFREE, symtab)->sval;
@@ -346,20 +346,22 @@ lookup(const char *s, Array *tp)	/* look for s in tp */
 Awkfloat
 setfval(Cell *vp, Awkfloat f)	/* set float val of a Cell */
 {
-	int	i;
+	int fldno;
 
 	if ((vp->tval & (NUM | STR)) == 0)
 		funnyvar(vp, "assign to");
 	if (isfld(vp)) {
 		donerec = 0;	/* mark $0 invalid */
-		i = fldidx(vp);
-		if (i > *NF)
-			newfld(i);
-		dprintf(("setting field %d to %g\n", i, f));
+		fldno = atoi(vp->nval);
+		if (fldno > *NF)
+			newfld(fldno);
+		dprintf(("setting field %d to %g\n", fldno, f));
 	} else if (isrec(vp)) {
 		donefld = 0;	/* mark $1... invalid */
 		donerec = 1;
 	}
+	if (freeable(vp))
+		xfree(vp->sval); /* free any previous string */
 	vp->tval &= ~STR;	/* mark string invalid */
 	vp->tval |= NUM;	/* mark number ok */
 	if (f == -0)  /* who would have thought this possible? */
@@ -384,7 +386,7 @@ char *
 setsval(Cell *vp, const char *s)	/* set string val of a Cell */
 {
 	char *t;
-	int	i;
+	int fldno;
 
 	dprintf(("starting setsval %p: %s = \"%s\", t=%o, r,f=%d,%d\n",
 	    (void *)vp, NN(vp->nval), s, vp->tval, donerec, donefld));
@@ -392,10 +394,10 @@ setsval(Cell *vp, const char *s)	/* set string val of a Cell */
 		funnyvar(vp, "assign to");
 	if (isfld(vp)) {
 		donerec = 0;	/* mark $0 invalid */
-		i = fldidx(vp);
-		if (i > *NF)
-			newfld(i);
-		dprintf(("setting field %d to %s (%p)\n", i, s, (void *)s));
+		fldno = atoi(vp->nval);
+		if (fldno > *NF)
+			newfld(fldno);
+		dprintf(("setting field %d to %s (%p)\n", fldno, s, (void *)s));
 	} else if (isrec(vp)) {
 		donefld = 0;	/* mark $1... invalid */
 		donerec = 1;
@@ -406,8 +408,9 @@ setsval(Cell *vp, const char *s)	/* set string val of a Cell */
 	vp->tval &= ~NUM;
 	vp->tval |= STR;
 	vp->tval &= ~DONTFREE;
-	dprintf(("setsval %p: %s = \"%s (%p) \", t=%o\n",
-	    (void *)vp, NN(vp->nval), t, (void *)t, vp->tval));
+	dprintf(("setsval %p: %s = \"%s (%p) \", t=%o r,f=%d,%d\n",
+	    (void *)vp, NN(vp->nval), t, (void *)t,
+	    vp->tval, donerec, donefld));
 	return (vp->sval = t);
 }
 

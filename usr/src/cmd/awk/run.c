@@ -206,7 +206,7 @@ program(Node **a, int n)
 		tempfree(x);
 	}
 	if (a[1] || a[2])
-		while (getrec(&record, &recsize) > 0) {
+		while (getrec(&record, &recsize, 1) > 0) {
 			x = execute(a[1]);
 			if (isexit(x))
 				break;
@@ -474,9 +474,9 @@ awkgetline(Node **a, int n)	/* get next line from specific input */
 		}
 	} else {			/* bare getline; use current input */
 		if (a[0] == NULL)	/* getline */
-			n = getrec(&record, &recsize);
+			n = getrec(&record, &recsize, 1);
 		else {			/* getline var */
-			n = getrec(&buf, &bufsize);
+			n = getrec(&buf, &bufsize, 0);
 			x = execute(a[0]);
 			(void) setsval(x, buf);
 			tempfree(x);

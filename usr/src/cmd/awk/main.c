@@ -106,7 +106,7 @@ main(int argc, char *argv[], char *envp[])
 	srand((unsigned int)srand_seed);
 
 	yyin = NULL;
-	syminit();
+	symtab = makesymtab(NSYMTAB/NSYMTAB);
 	while (argc > 1 && argv[1][0] == '-' && argv[1][1] != '\0') {
 		if (strcmp(argv[1], "-version") == 0 ||
 		    strcmp(argv[1], "--version") == 0) {
@@ -207,6 +207,8 @@ main(int argc, char *argv[], char *envp[])
 		argc--;
 		argv++;
 	}
+	recinit(recsize);
+	syminit();
 	compile_time = 1;
 	argv[0] = cmdname;	/* put prog name at front of arglist */
 	dprintf(("argc=%d, argv[0]=%s\n", argc, argv[0]));
