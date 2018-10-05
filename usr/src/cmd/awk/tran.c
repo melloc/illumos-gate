@@ -178,6 +178,8 @@ envinit(char **envp)	/* set up ENVIRON variable */
 	for (; *envp; envp++) {
 		if ((p = strchr(*envp, '=')) == NULL)
 			continue;
+		if (p == *envp)	/* no left hand side name in env string */
+			continue;
 		*p++ = 0;	/* split into two strings at = */
 		if (is_number(p)) {
 			(void) setsymtab(*envp, p, atof(p),
