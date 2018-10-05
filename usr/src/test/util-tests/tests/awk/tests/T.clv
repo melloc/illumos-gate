@@ -150,4 +150,9 @@ $AWK 'BEGIN { printf("a%c%c%cz\n", "\b", "\r", "\f") }' > $TEMP1
 echo 'hello' | $AWK '{print x}' x='a\b\r\fz' > $TEMP2
 diff $TEMP1 $TEMP2 || fail 'BAD: T.clv (x=19)'
 
+echo '\' > $TEMP1
+$AWK -v 'x=\' 'BEGIN { print x; }' > $TEMP2
+diff $TEMP1 $TEMP2 || fail 'BAD: T.clv (x=\)'
+
+
 exit $RESULT

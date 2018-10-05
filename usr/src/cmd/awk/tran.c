@@ -481,32 +481,36 @@ tostring(const char *s)	/* make a copy of string s */
 }
 
 char *
-qstring(const char *s, int delim)	/* collect string up to delim */
+qstring(const char *is, int delim)	/* collect string up to next delim */
 {
-	char *cbuf, *ret;
+	const char *os = is;
 	int c, n;
-	size_t	cbufsz, cnt;
+	uschar *s = (uschar *)is;
+	uschar *buf, *bp;
 
-	init_buf(&cbuf, &cbufsz, LINE_INCR);
-
-	for (cnt = 0; (c = *s) != delim; s++) {
+	if ((buf = (uschar *)malloc(strlen(is)+3)) == NULL)
+		FATAL("out of space in qstring(%s)", s);
+	for (bp = buf; (c = *s) != delim; s++) {
 		if (c == '\n') {
-			SYNTAX("newline in string %.10s...", cbuf);
-		} else if (c != '\\') {
-			expand_buf(&cbuf, &cbufsz, cnt);
-			cbuf[cnt++] = c;
-		} else {	/* \something */
-			expand_buf(&cbuf, &cbufsz, cnt);
-			switch (c = *++s) {
-			case '\\':	cbuf[cnt++] = '\\'; break;
-			case 'n':	cbuf[cnt++] = '\n'; break;
-			case 't':	cbuf[cnt++] = '\t'; break;
-			case 'b':	cbuf[cnt++] = '\b'; break;
-			case 'f':	cbuf[cnt++] = '\f'; break;
-			case 'r':	cbuf[cnt++] = '\r'; break;
+			SYNTAX("newline in string %.20s...", os);
+		} else if (c != '\\')
+			*bp++ = c;
+		else {	/* \something */
+			c = *++s;
+			if (c == 0) {	/* \ at end */
+				*bp++ = '\\';
+				break;	/* for loop */
+			}
+			switch (c) {
+			case '\\':	*bp++ = '\\'; break;
+			case 'n':	*bp++ = '\n'; break;
+			case 't':	*bp++ = '\t'; break;
+			case 'b':	*bp++ = '\b'; break;
+			case 'f':	*bp++ = '\f'; break;
+			case 'r':	*bp++ = '\r'; break;
 			default:
 				if (!isdigit(c)) {
-					cbuf[cnt++] = c;
+					*bp++ = c;
 					break;
 				}
 				n = c - '0';
@@ -515,13 +519,11 @@ qstring(const char *s, int delim)	/* collect string up to delim */
 					if (isdigit(s[1]))
 						n = 8 * n + *++s - '0';
 				}
-				cbuf[cnt++] = n;
+				*bp++ = n;
 				break;
 			}
 		}
 	}
-	cbuf[cnt] = '\0';
-	ret = tostring(cbuf);
-	free(cbuf);
-	return (ret);
+	*bp++ = 0;
+	return ((char *)buf);
 }
