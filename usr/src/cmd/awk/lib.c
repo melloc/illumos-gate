@@ -70,6 +70,8 @@ size_t	recsize;
 static char	*fields;
 static size_t	fieldssize = LINE_INCR;
 
+char	inputFS[100] = " ";
+
 int	donefld;	/* 1 = implies rec broken into fields */
 int	donerec;	/* 1 = record is valid (no flds have changed) */
 
@@ -193,6 +195,10 @@ readrec(char **bufp, size_t *sizep, FILE *inf)	/* read one record into buf */
 	size_t	bufsize;
 
 	init_buf(&buf, &bufsize, LINE_INCR);
+
+	if (strlen(*FS) >= sizeof (inputFS))
+		FATAL("field separator %.10s... is too long", *FS);
+	(void) strcpy(inputFS, *FS);	/* for subsequent field splitting */
 	if ((sep = **RS) == 0) {
 		sep = '\n';
 		/* skip leading \n's */
@@ -285,9 +291,10 @@ fldbld(void)	/* create fields from current record */
 	fr = fields;
 
 	i = 0;	/* number of fields accumulated here */
-	if (strlen(*FS) > 1) {	/* it's a regular expression */
-		i = refldbld(r, *FS);
-	} else if ((sep = **FS) == ' ') {
+	(void) strcpy(inputFS, *FS);
+	if (strlen(inputFS) > 1) {	/* it's a regular expression */
+		i = refldbld(r, inputFS);
+	} else if ((sep = *inputFS) == ' ') {	/* default whitespace */
 		for (i = 0; ; ) {
 			while (*r == ' ' || *r == '\t' || *r == '\n')
 				r++;
@@ -517,12 +524,12 @@ recbld(void)	/* create $0 from $1..$NF if necessary */
 		}
 	}
 	record[cnt] = '\0';
-	dprintf(("in recbld FS=%o, recloc=%p\n", **FS, (void *)recloc));
+	dprintf(("in recbld inputFS=%s, recloc=%p\n", inputFS, (void *)recloc));
 	if (freeable(recloc))
 		xfree(recloc->sval);
 	recloc->tval = REC | STR | DONTFREE;
 	recloc->sval = record;
-	dprintf(("in recbld FS=%o, recloc=%p\n", **FS, (void *)recloc));
+	dprintf(("in recbld inputFS=%s, recloc=%p\n", inputFS, (void *)recloc));
 	dprintf(("recbld = |%s|\n", record));
 	donerec = 1;
 }
