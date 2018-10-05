@@ -545,8 +545,14 @@ awkdelete(Node **a, int n)	/* a[0] is symtab, a[1] is list of subscripts */
 	size_t tlen = 0, len;
 
 	x = execute(a[0]);	/* Cell* for symbol table */
-	if (!isarr(x))
-		return (True);
+	if (!isarr(x)) {
+		dprintf(("making %s into an array\n", x->nval));
+		if (freeable(x))
+			xfree(x->sval);
+		x->tval &= ~(STR|NUM|DONTFREE);
+		x->tval |= ARR;
+		x->sval = (char *)makesymtab(NSYMTAB);
+	}
 	if (a[1] == NULL) {	/* delete the elements, not the table */
 		freesymtab(x);
 		x->tval &= ~STR;
