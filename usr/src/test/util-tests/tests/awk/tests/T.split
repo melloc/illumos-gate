@@ -113,6 +113,19 @@ BEGIN { FS = "" }
 diff $TEMP0 $TEMP2 || fail 'BAD: T.split 3'
 
 
+$AWK '
+{ n = split( $0, temp, /^@@@ +/ )
+  print n
+}' > $TEMP1 <<XXX
+@@@ xxx
+@@@ xxx
+@@@ xxx
+XXX
+echo '2
+2
+2' > $TEMP2
+diff $TEMP1 $TEMP2 || fail 'BAD: T.split 4'
+
 rm -f $WORKDIR/test.temp*
 
 echo '

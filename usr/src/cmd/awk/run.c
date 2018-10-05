@@ -1386,6 +1386,9 @@ split(Node **a, int nnn)	/* split(a[0], a[1], a[2]); a[3] is type */
 					goto spdone;
 				}
 			} while (nematch(pfa, s));
+			/* bwk: has to be here to reset */
+			/* cf gsub and refldbld */
+			pfa->initstat = tempstat;
 		}
 		n++;
 		(void) sprintf(num, "%d", n);
