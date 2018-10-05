@@ -584,8 +584,14 @@ intest(Node **a, int n)	/* a[0] is index (list), a[1] is symtab */
 	size_t bsize, tlen, slen, len;
 
 	ap = execute(a[1]);	/* array name */
-	if (!isarr(ap))
-		FATAL("%s is not an array", ap->nval);
+	if (!isarr(ap)) {
+		dprintf(("making %s into an array\n", ap->nval));
+		if (freeable(ap))
+			xfree(ap->sval);
+		ap->tval &= ~(STR|NUM|DONTFREE);
+		ap->tval |= ARR;
+		ap->sval = (char *)makesymtab(NSYMTAB);
+	}
 	init_buf(&buf, &bsize, LINE_INCR);
 	buf[0] = '\0';
 	tlen = 0;
