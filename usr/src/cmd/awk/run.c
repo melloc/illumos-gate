@@ -506,23 +506,27 @@ array(Node **a, int n)	/* a[0] is symtab, a[1] is list of subscripts */
 	char *s;
 	Node *np;
 	char *buf;
-	size_t	bsize, tlen, len, slen;
+	size_t bufsz = recsize;
+	size_t tlen = 0, len, nsub;
+
+	if ((buf = (char *)malloc(bufsz)) == NULL)
+		FATAL("out of memory in array");
 
 	x = execute(a[0]);	/* Cell* for symbol table */
-	init_buf(&buf, &bsize, LINE_INCR);
 	buf[0] = '\0';
-	tlen = 0;
-	slen = strlen(*SUBSEP);
 	for (np = a[1]; np != NULL; np = np->nnext) {
 		y = execute(np);	/* subscript */
 		s = getsval(y);
 		len = strlen(s);
-		expand_buf(&buf, &bsize, tlen + len + slen);
+		nsub = strlen(getsval(subseploc));
+		if (!adjbuf(&buf, &bufsz, tlen + len + nsub, recsize, 0,
+		    "array"))
+			FATAL("out of memory for %s[%s...]", x->nval, buf);
 		(void) memcpy(&buf[tlen], s, len);
 		tlen += len;
 		if (np->nnext) {
-			(void) memcpy(&buf[tlen], *SUBSEP, slen);
-			tlen += slen;
+			(void) memcpy(&buf[tlen], *SUBSEP, nsub);
+			tlen += nsub;
 		}
 		buf[tlen] = '\0';
 		tempfree(y);
@@ -551,7 +555,7 @@ awkdelete(Node **a, int n)	/* a[0] is symtab, a[1] is list of subscripts */
 	Cell *x, *y;
 	Node *np;
 	char *s;
-	size_t nsub = strlen(*SUBSEP);
+	size_t nsub;
 	size_t tlen = 0, len;
 
 	x = execute(a[0]);	/* Cell* for symbol table */
@@ -578,6 +582,7 @@ awkdelete(Node **a, int n)	/* a[0] is symtab, a[1] is list of subscripts */
 			y = execute(np);	/* subscript */
 			s = getsval(y);
 			len = strlen(s);
+			nsub = strlen(getsval(subseploc));
 			if (!adjbuf(&buf, &bufsz, tlen + len + nsub, recsize, 0,
 			    "awkdelete"))
 				FATAL("out of memory deleting %s[%s...]",
@@ -606,7 +611,9 @@ intest(Node **a, int n)	/* a[0] is index (list), a[1] is symtab */
 	Node *p;
 	char *buf;
 	char *s;
-	size_t bsize, tlen, slen, len;
+	size_t bufsz = recsize;
+	size_t nsub;
+	size_t tlen = 0, len;
 
 	ap = execute(a[1]);	/* array name */
 	if (!isarr(ap)) {
@@ -617,21 +624,24 @@ intest(Node **a, int n)	/* a[0] is index (list), a[1] is symtab */
 		ap->tval |= ARR;
 		ap->sval = (char *)makesymtab(NSYMTAB);
 	}
-	init_buf(&buf, &bsize, LINE_INCR);
+	if ((buf = (char *)malloc(bufsz)) == NULL) {
+		FATAL("out of memory in intest");
+	}
 	buf[0] = '\0';
-	tlen = 0;
-	slen = strlen(*SUBSEP);
 	for (p = a[0]; p != NULL; p = p->nnext) {
 		x = execute(p);	/* expr */
 		s = getsval(x);
 		len = strlen(s);
-		expand_buf(&buf, &bsize, tlen + len + slen);
+		nsub = strlen(getsval(subseploc));
+		if (!adjbuf(&buf, &bufsz, tlen + len + nsub, recsize, 0,
+		    "intest"))
+			FATAL("out of memory deleting %s[%s...]", x->nval, buf);
 		(void) memcpy(&buf[tlen], s, len);
 		tlen += len;
 		tempfree(x);
 		if (p->nnext) {
-			(void) memcpy(&buf[tlen], *SUBSEP, slen);
-			tlen += slen;
+			(void) memcpy(&buf[tlen], *SUBSEP, nsub);
+			tlen += nsub;
 		}
 		buf[tlen] = '\0';
 	}
@@ -1388,8 +1398,8 @@ split(Node **a, int nnn)	/* split(a[0], a[1], a[2]); a[3] is type */
 	y = execute(a[0]);	/* source string */
 	origs = s = strdup(getsval(y));
 	arg3type = ptoi(a[3]);
-	if (a[2] == NULL)		/* fs string */
-		origs = fs = strdup(getsval(fsloc));
+	if (a[2] == NULL)	/* fs string */
+		fs = getsval(fsloc);
 	else if (arg3type == STRING) {	/* split(str,arr,"string") */
 		x = execute(a[2]);
 		origfs = fs = strdup(getsval(x));
@@ -1829,9 +1839,9 @@ printstat(Node **a, int n)	/* print a[0] */
 		(void) fputs(getpssval(y), fp);
 		tempfree(y);
 		if (x->nnext == NULL)
-			(void) fputs(*ORS, fp);
+			(void) fputs(getsval(orsloc), fp);
 		else
-			(void) fputs(*OFS, fp);
+			(void) fputs(getsval(ofsloc), fp);
 	}
 	if (a[1] != NULL)
 		(void) fflush(fp);
