@@ -1234,7 +1234,13 @@ assign(Node **a, int n)
 	y = execute(a[1]);
 	x = execute(a[0]);	/* order reversed from before... */
 	if (n == ASSIGN) {	/* ordinary assignment */
-		if ((y->tval & (STR|NUM)) == (STR|NUM)) {
+		/*LINTED if*/
+		if (x == y && !(x->tval & (FLD|REC)) && x != nfloc) {
+			/*
+			 * If this is a self-assignment, we leave things alone,
+			 * unless it's a field or NF.
+			 */
+		} else if ((y->tval & (STR|NUM)) == (STR|NUM)) {
 			(void) setsval(x, getsval(y));
 			x->fval = getfval(y);
 			x->tval |= NUM;

@@ -355,6 +355,7 @@ extern	void	adjust_buf(char **, size_t);
 extern	void	r_expand_buf(char **, size_t *, size_t);
 extern	void	makefields(int, int);
 extern	void	growfldtab(int n);
+extern	void	setlastfld(int n);
 
 /* main.c */
 extern	int	dbg;

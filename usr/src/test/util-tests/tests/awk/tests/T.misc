@@ -60,9 +60,10 @@ echo '3
 cmp -s $TEMP1 $TEMP2 || fail 'BAD: T.misc bad field increment'
 
 # makes sure that fields are recomputed even if self-assignment
+# take into account that subtracting from NF now rebuilds the record
 echo 'a b c
 s p q r
-x y' > $TEMP0
+x y z' > $TEMP0
 echo 'a
 s p
 x' > $TEMP1

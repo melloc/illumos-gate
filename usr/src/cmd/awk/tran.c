@@ -368,9 +368,16 @@ setfval(Cell *vp, Awkfloat f)	/* set float val of a Cell */
 		if (fldno > *NF)
 			newfld(fldno);
 		dprintf(("setting field %d to %g\n", fldno, f));
+	} else if (&vp->fval == NF) {
+		donerec = 0;	/* mark $0 invalid */
+		setlastfld((int)f);
+		dprintf(("setting NF to %g\n", f));
 	} else if (isrec(vp)) {
 		donefld = 0;	/* mark $1... invalid */
 		donerec = 1;
+	} else if (&vp->sval == OFS) {
+		if (donerec == 0)
+			recbld();
 	}
 	if (freeable(vp))
 		xfree(vp->sval); /* free any previous string */
@@ -400,6 +407,7 @@ setsval(Cell *vp, const char *s)	/* set string val of a Cell */
 {
 	char *t;
 	int fldno;
+	Awkfloat f;
 
 	dprintf(("starting setsval %p: %s = \"%s\", t=%o, r,f=%d,%d\n",
 	    (void *)vp, NN(vp->nval), s, vp->tval, donerec, donefld));
@@ -414,6 +422,9 @@ setsval(Cell *vp, const char *s)	/* set string val of a Cell */
 	} else if (isrec(vp)) {
 		donefld = 0;	/* mark $1... invalid */
 		donerec = 1;
+	} else if (&vp->sval == OFS) {
+		if (donerec == 0)
+			recbld();
 	}
 	t = tostring(s);	/* in case it's self-assign */
 	if (freeable(vp))
@@ -426,6 +437,12 @@ setsval(Cell *vp, const char *s)	/* set string val of a Cell */
 	    (void *)vp, NN(vp->nval), t, (void *)t,
 	    vp->tval, donerec, donefld));
 	vp->sval = t;
+	if (&vp->fval == NF) {
+		donerec = 0;	/* mark $0 invalid */
+		f = getfval(vp);
+		setlastfld((int)f);
+		dprintf(("setting NF to %g\n", f));
+	}
 
 	return (vp->sval);
 }
