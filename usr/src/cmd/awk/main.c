@@ -103,6 +103,12 @@ main(int argc, char *argv[], char *envp[])
 	yyin = NULL;
 	syminit();
 	while (argc > 1 && argv[1][0] == '-' && argv[1][1] != '\0') {
+		if (strcmp(argv[1], "-version") == 0 ||
+		    strcmp(argv[1], "--version") == 0) {
+			(void) printf("awk %s\n", version);
+			exit(0);
+			break;
+		}
 		if (strcmp(argv[1], "--") == 0) {
 			/* explicit end of args */
 			argc--;
