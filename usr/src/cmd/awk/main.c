@@ -214,7 +214,7 @@ pgetc(void)		/* get 1 character from awk program */
 			if (curpfile >= npfile)
 				return (EOF);
 			yyin = (strcmp(pfile[curpfile], "-") == 0) ?
-			    stdin : fopen(pfile[curpfile], "r");
+			    stdin : fopen(pfile[curpfile], "rF");
 			if (yyin == NULL) {
 				FATAL("can't open file %s", pfile[curpfile]);
 			}

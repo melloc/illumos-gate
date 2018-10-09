@@ -61,11 +61,6 @@
 
 #define	tempfree(x)	if (istemp(x)) tfree(x)
 
-#ifndef	FOPEN_MAX
-#define	FOPEN_MAX	15	/* max number of open files, from ANSI std. */
-#endif
-
-
 static jmp_buf env;
 
 static	Cell	*execute(Node *);
@@ -143,6 +138,9 @@ adjbuf(char **pbuf, size_t *psiz, size_t minlen, size_t quantum, char **pbptr,
 void
 run(Node *a)	/* execution of parse tree starts here */
 {
+	extern void stdinit(void);
+
+	stdinit();
 	(void) execute(a);
 	closeall();
 }
@@ -1767,11 +1765,6 @@ nullproc(Node **a, int n)
 	return (0);
 }
 
-struct {
-	FILE	*fp;
-	char	*fname;
-	int	mode;	/* '|', 'a', 'w' */
-} files[FOPEN_MAX];
 
 static FILE *
 redirect(int a, Node *b)	/* set up all i/o redirections */
@@ -1789,6 +1782,32 @@ redirect(int a, Node *b)	/* set up all i/o redirections */
 	return (fp);
 }
 
+struct files {
+	FILE	*fp;
+	const char	*fname;
+	int	mode;	/* '|', 'a', 'w' => LE/LT, GT */
+} *files;
+
+int nfiles;
+
+void
+stdinit(void)	/* in case stdin, etc., are not constants */
+{
+	nfiles = FOPEN_MAX;
+	files = calloc(nfiles, sizeof (*files));
+	if (files == NULL)
+		FATAL("can't allocate file memory for %u files", nfiles);
+	files[0].fp = stdin;
+	files[0].fname = "/dev/stdin";
+	files[0].mode = LT;
+	files[1].fp = stdout;
+	files[1].fname = "/dev/stdout";
+	files[1].mode = GT;
+	files[2].fp = stderr;
+	files[2].fname = "/dev/stderr";
+	files[2].mode = GT;
+}
+
 static FILE *
 openfile(int a, const char *s)
 {
@@ -1797,7 +1816,7 @@ openfile(int a, const char *s)
 
 	if (*s == '\0')
 		FATAL("null file name in print or getline");
-	for (i = 0; i < FOPEN_MAX; i++) {
+	for (i = 0; i < nfiles; i++) {
 		if (files[i].fname && strcmp(s, files[i].fname) == 0) {
 			if (a == files[i].mode ||
 			    (a == APPEND && files[i].mode == GT)) {
@@ -1810,26 +1829,34 @@ openfile(int a, const char *s)
 	if (a == FFLUSH)	/* didn't find it, so don't create it! */
 		return (NULL);
 
-	for (i = 0; i < FOPEN_MAX; i++) {
+	for (i = 0; i < nfiles; i++) {
 		if (files[i].fp == 0)
 			break;
 	}
-	if (i >= FOPEN_MAX)
-		FATAL("%s makes too many open files", s);
+	if (i >= nfiles) {
+		struct files *nf;
+		int nnf = nfiles + FOPEN_MAX;
+		nf = realloc(files, nnf * sizeof (*nf));
+		if (nf == NULL)
+			FATAL("cannot grow files for %s and %d files", s, nnf);
+		(void) memset(&nf[nfiles], 0, FOPEN_MAX * sizeof (*nf));
+		nfiles = nnf;
+		files = nf;
+	}
 	(void) fflush(stdout);	/* force a semblance of order */
 	m = a;
 	if (a == GT) {
-		fp = fopen(s, "w");
+		fp = fopen(s, "wF");
 	} else if (a == APPEND) {
-		fp = fopen(s, "a");
+		fp = fopen(s, "aF");
 		m = GT;	/* so can mix > and >> */
 	} else if (a == '|') {	/* output pipe */
-		fp = popen(s, "w");
+		fp = popen(s, "wF");
 	} else if (a == LE) {	/* input pipe */
-		fp = popen(s, "r");
+		fp = popen(s, "rF");
 	} else if (a == LT) {	/* getline <file */
 		fp = strcmp(s, "-") == 0 ?
-		    stdin : fopen(s, "r");	/* "-" is stdin */
+		    stdin : fopen(s, "rF");	/* "-" is stdin */
 	} else	/* can't happen */
 		FATAL("illegal redirection %d", a);
 	if (fp != NULL) {
@@ -1845,7 +1872,7 @@ filename(FILE *fp)
 {
 	int i;
 
-	for (i = 0; i < FOPEN_MAX; i++)
+	for (i = 0; i < nfiles; i++)
 		if (fp == files[i].fp)
 			return (files[i].fname);
 	return ("???");
@@ -1861,7 +1888,7 @@ closefile(Node **a, int n)
 	x = execute(a[0]);
 	(void) getsval(x);
 	stat = -1;
-	for (i = 0; i < FOPEN_MAX; i++) {
+	for (i = 0; i < nfiles; i++) {
 		if (files[i].fname && strcmp(x->sval, files[i].fname) == 0) {
 			if (ferror(files[i].fp)) {
 				WARNING("i/o error occurred on %s",
@@ -1893,7 +1920,7 @@ closeall(void)
 {
 	int i, stat;
 
-	for (i = 0; i < FOPEN_MAX; i++) {
+	for (i = 0; i < nfiles; i++) {
 		if (files[i].fp) {
 			if (ferror(files[i].fp)) {
 				WARNING("i/o error occurred on %s",
@@ -1916,7 +1943,7 @@ flush_all(void)
 {
 	int i;
 
-	for (i = 0; i < FOPEN_MAX; i++)
+	for (i = 0; i < nfiles; i++)
 		if (files[i].fp)
 			(void) fflush(files[i].fp);
 }

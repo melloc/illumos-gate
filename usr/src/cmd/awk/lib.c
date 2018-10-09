@@ -150,7 +150,7 @@ getrec(char **pbuf, size_t *pbufsize)
 			dprintf(("opening file %s\n", file));
 			if (*file == '-' && *(file+1) == '\0')
 				infile = stdin;
-			else if ((infile = fopen(file, "r")) == NULL)
+			else if ((infile = fopen(file, "rF")) == NULL)
 				FATAL("can't open file %s", file);
 			(void) setfval(fnrloc, 0.0);
 		}
