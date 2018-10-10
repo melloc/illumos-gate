@@ -156,18 +156,12 @@ extern Cell	*rlengthloc;	/* RLENGTH */
 
 extern Awkfloat	setfval(Cell *, Awkfloat);
 extern Awkfloat	getfval(Cell *);
-extern Awkfloat	r_getfval(Cell *);
 extern char	*setsval(Cell *, const char *);
 extern char	*getsval(Cell *);
-extern char	*r_getsval(Cell *);
+extern char	*getpssval(Cell *);	/* for print */
 extern char	*tostring(const char *);
 extern char	*tokname(int);
 extern char	*qstring(const char *, int);
-
-#define	getfval(p)	\
-	(((p)->tval & (ARR|FLD|REC|NUM)) == NUM ? (p)->fval : r_getfval(p))
-#define	getsval(p)	\
-	(((p)->tval & (ARR|FLD|REC|STR)) == STR ? (p)->sval : r_getsval(p))
 
 /* function types */
 #define	FLENGTH	1

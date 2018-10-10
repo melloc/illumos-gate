@@ -70,6 +70,7 @@ char	**RS;		/* initial record sep */
 char	**OFS;		/* output field sep */
 char	**ORS;		/* output record sep */
 char	**OFMT;		/* output format for numbers */
+char	**CONVFMT;	/* format for conversions in getsval */
 Awkfloat *NF;		/* number of fields in current record */
 Awkfloat *NR;		/* number of current record */
 Awkfloat *FNR;		/* number of current record in current file */
@@ -121,6 +122,8 @@ syminit(void)	/* initialize symbol table with builtin vars */
 	ORS = &setsymtab("ORS", "\n", 0.0,
 	    STR|DONTFREE, symtab)->sval;
 	OFMT = &setsymtab("OFMT", "%.6g", 0.0,
+	    STR|DONTFREE, symtab)->sval;
+	CONVFMT = &setsymtab("CONVFMT", "%.6g", 0.0,
 	    STR|DONTFREE, symtab)->sval;
 	FILENAME = &setsymtab("FILENAME", "-", 0.0,
 	    STR|DONTFREE, symtab)->sval;
@@ -414,7 +417,7 @@ setsval(Cell *vp, const char *s)	/* set string val of a Cell */
 }
 
 Awkfloat
-r_getfval(Cell *vp)	/* get float val of a Cell */
+getfval(Cell *vp)	/* get float val of a Cell */
 {
 	if ((vp->tval & (NUM | STR)) == 0)
 		funnyvar(vp, "read value of");
@@ -432,8 +435,8 @@ r_getfval(Cell *vp)	/* get float val of a Cell */
 	return (vp->fval);
 }
 
-char *
-r_getsval(Cell *vp)	/* get string val of a Cell */
+static char *
+get_str_val(Cell *vp, char **fmt)	/* get string val of a Cell */
 {
 	char s[256];
 	double dtemp;
@@ -453,7 +456,7 @@ r_getsval(Cell *vp)	/* get string val of a Cell */
 		} else {
 			/*LINTED*/
 			(void) snprintf(s, sizeof (s),
-			    *OFMT, vp->fval);
+			    *fmt, vp->fval);
 		}
 		vp->sval = tostring(s);
 		vp->tval &= ~DONTFREE;
@@ -463,6 +466,19 @@ r_getsval(Cell *vp)	/* get string val of a Cell */
 	    (void *)vp, NN(vp->nval), vp->sval, (void *)vp->sval, vp->tval));
 	return (vp->sval);
 }
+
+char *
+getsval(Cell *vp)	/* get string val of a Cell */
+{
+	return (get_str_val(vp, CONVFMT));
+}
+
+char *
+getpssval(Cell *vp)	/* get string val of a Cell for print */
+{
+	return (get_str_val(vp, OFMT));
+}
+
 
 char *
 tostring(const char *s)	/* make a copy of string s */

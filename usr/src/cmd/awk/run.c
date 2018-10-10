@@ -1678,7 +1678,7 @@ printstat(Node **a, int n)	/* print a[0] */
 		fp = redirect(ptoi(a[1]), a[2]);
 	for (x = a[0]; x != NULL; x = x->nnext) {
 		y = execute(x);
-		(void) fputs(getsval(y), fp);
+		(void) fputs(getpssval(y), fp);
 		tempfree(y);
 		if (x->nnext == NULL)
 			(void) fputs(*ORS, fp);
