@@ -97,6 +97,18 @@ Cell	*literal0;
 
 static	void	rehash(Array *);
 
+static void
+setfree(Cell *vp)
+{
+	if (&vp->sval == FS || &vp->sval == RS ||
+	    &vp->sval == OFS || &vp->sval == ORS ||
+	    &vp->sval == OFMT || &vp->sval == CONVFMT ||
+	    &vp->sval == FILENAME || &vp->sval == SUBSEP)
+		vp->tval |= DONTFREE;
+	else
+		vp->tval &= ~DONTFREE;
+}
+
 void
 syminit(void)	/* initialize symbol table with builtin vars */
 {
@@ -362,7 +374,8 @@ setfval(Cell *vp, Awkfloat f)	/* set float val of a Cell */
 	}
 	if (freeable(vp))
 		xfree(vp->sval); /* free any previous string */
-	vp->tval &= ~STR;	/* mark string invalid */
+	vp->tval &= ~(STR|CONVC|CONVO); /* mark string invalid */
+	vp->fmt = NULL;
 	vp->tval |= NUM;	/* mark number ok */
 	if (f == -0)  /* who would have thought this possible? */
 		f = 0;
@@ -405,13 +418,16 @@ setsval(Cell *vp, const char *s)	/* set string val of a Cell */
 	t = tostring(s);	/* in case it's self-assign */
 	if (freeable(vp))
 		xfree(vp->sval);
-	vp->tval &= ~NUM;
+	vp->tval &= ~(NUM|CONVC|CONVO);
 	vp->tval |= STR;
-	vp->tval &= ~DONTFREE;
+	vp->fmt = NULL;
+	setfree(vp);
 	dprintf(("setsval %p: %s = \"%s (%p) \", t=%o r,f=%d,%d\n",
 	    (void *)vp, NN(vp->nval), t, (void *)t,
 	    vp->tval, donerec, donefld));
-	return (vp->sval = t);
+	vp->sval = t;
+
+	return (vp->sval);
 }
 
 Awkfloat
@@ -428,8 +444,8 @@ getfval(Cell *vp)	/* get float val of a Cell */
 		if (is_number(vp->sval) && !(vp->tval&CON))
 			vp->tval |= NUM;	/* make NUM only sparingly */
 	}
-	dprintf(("getfval %p: %s = %g, t=%p\n",
-	    (void *)vp, NN(vp->nval), vp->fval, (void *)vp->tval));
+	dprintf(("getfval %p: %s = %g, t=%o\n",
+	    (void *)vp, NN(vp->nval), vp->fval, vp->tval));
 	return (vp->fval);
 }
 
@@ -445,21 +461,81 @@ get_str_val(Cell *vp, char **fmt)	/* get string val of a Cell */
 		fldbld();
 	else if (isrec(vp) && donerec == 0)
 		recbld();
-	if (isstr(vp) == 0) {
-		if (freeable(vp))
-			xfree(vp->sval);
-		if (modf(vp->fval, &dtemp) == 0) {	/* it's integral */
-			(void) snprintf(s, sizeof (s),
-			    "%.30g", vp->fval);
-		} else {
-			/*LINTED*/
-			(void) snprintf(s, sizeof (s),
-			    *fmt, vp->fval);
-		}
-		vp->sval = tostring(s);
-		vp->tval &= ~DONTFREE;
-		vp->tval |= STR;
+
+	/*
+	 * ADR: This is complicated and more fragile than is desirable.
+	 * Retrieving a string value for a number associates the string
+	 * value with the scalar.  Previously, the string value was
+	 * sticky, meaning if converted via OFMT that became the value
+	 * (even though POSIX wants it to be via CONVFMT). Or if CONVFMT
+	 * changed after a string value was retrieved, the original value
+	 * was maintained and used.  Also not per POSIX.
+	 *
+	 * We work around this design by adding two additional flags,
+	 * CONVC and CONVO, indicating how the string value was
+	 * obtained (via CONVFMT or OFMT) and _also_ maintaining a copy
+	 * of the pointer to the xFMT format string used for the
+	 * conversion.  This pointer is only read, **never** dereferenced.
+	 * The next time we do a conversion, if it's coming from the same
+	 * xFMT as last time, and the pointer value is different, we
+	 * know that the xFMT format string changed, and we need to
+	 * redo the conversion. If it's the same, we don't have to.
+	 *
+	 * There are also several cases where we don't do a conversion,
+	 * such as for a field (see the checks below).
+	 */
+
+	/* Don't duplicate the code for actually updating the value */
+#define	update_str_val(vp) \
+	{ \
+		if (freeable(vp)) \
+			xfree(vp->sval); \
+		if (modf(vp->fval, &dtemp) == 0)	/* it's integral */ \
+			(void) snprintf(s, sizeof (s), "%.30g", vp->fval); \
+		else \
+			(void) snprintf(s, sizeof (s), *fmt, vp->fval); \
+		vp->sval = tostring(s); \
+		vp->tval &= ~DONTFREE; \
+		vp->tval |= STR; \
 	}
+
+	if (isstr(vp) == 0) {
+		/*LINTED*/
+		update_str_val(vp);
+		if (fmt == OFMT) {
+			vp->tval &= ~CONVC;
+			vp->tval |= CONVO;
+		} else {
+			/* CONVFMT */
+			vp->tval &= ~CONVO;
+			vp->tval |= CONVC;
+		}
+		vp->fmt = *fmt;
+	} else if ((vp->tval & DONTFREE) != 0 || !isnum(vp) || isfld(vp)) {
+		goto done;
+	} else if (isstr(vp)) {
+		if (fmt == OFMT) {
+			if ((vp->tval & CONVC) != 0 ||
+			    ((vp->tval & CONVO) != 0 && vp->fmt != *fmt)) {
+				/*LINTED*/
+				update_str_val(vp);
+				vp->tval &= ~CONVC;
+				vp->tval |= CONVO;
+				vp->fmt = *fmt;
+			}
+		} else {
+			/* CONVFMT */
+			if ((vp->tval & CONVO) != 0 ||
+			    ((vp->tval & CONVC) != 0 && vp->fmt != *fmt)) {
+				/*LINTED*/
+				update_str_val(vp);
+				vp->tval &= ~CONVO;
+				vp->tval |= CONVC;
+				vp->fmt = *fmt;
+			}
+		}
+	}
+done:
 	dprintf(("getsval %p: %s = \"%s (%p)\", t=%o\n",
 	    (void *)vp, NN(vp->nval), vp->sval, (void *)vp->sval, vp->tval));
 	return (vp->sval);

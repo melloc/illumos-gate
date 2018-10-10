@@ -73,24 +73,25 @@ Node	*winner = NULL;		/* root of parse tree */
 
 static Cell	*tmps;		/* free temporary cells for execution */
 
-static Cell	truecell	= { OBOOL, BTRUE, NULL, NULL, 1.0, NUM };
+static Cell	truecell	= { OBOOL, BTRUE, NULL, NULL, 1.0, NUM, NULL };
 Cell	*True	= &truecell;
-static Cell	falsecell	= { OBOOL, BFALSE, NULL, NULL, 0.0, NUM };
+static Cell	falsecell	= { OBOOL, BFALSE, NULL, NULL, 0.0, NUM, NULL };
 Cell	*False	= &falsecell;
-static Cell	breakcell	= { OJUMP, JBREAK, NULL, NULL, 0.0, NUM };
+static Cell	breakcell	= { OJUMP, JBREAK, NULL, NULL, 0.0, NUM, NULL };
 Cell	*jbreak	= &breakcell;
-static Cell	contcell	= { OJUMP, JCONT, NULL, NULL, 0.0, NUM };
+static Cell	contcell	= { OJUMP, JCONT, NULL, NULL, 0.0, NUM, NULL };
 Cell	*jcont	= &contcell;
-static Cell	nextcell	= { OJUMP, JNEXT, NULL, NULL, 0.0, NUM };
+static Cell	nextcell	= { OJUMP, JNEXT, NULL, NULL, 0.0, NUM, NULL };
 Cell	*jnext	= &nextcell;
-static Cell	nextfilecell	= { OJUMP, JNEXTFILE, NULL, NULL, 0.0, NUM };
+static Cell	nextfilecell	= { OJUMP, JNEXTFILE, NULL, NULL, 0.0,
+				    NUM, NULL };
 Cell	*jnextfile	= &nextfilecell;
-static Cell	exitcell	= { OJUMP, JEXIT, NULL, NULL, 0.0, NUM };
+static Cell	exitcell	= { OJUMP, JEXIT, NULL, NULL, 0.0, NUM, NULL };
 Cell	*jexit	= &exitcell;
-static Cell	retcell		= { OJUMP, JRET, NULL, NULL, 0.0, NUM };
+static Cell	retcell		= { OJUMP, JRET, NULL, NULL, 0.0, NUM, NULL };
 Cell	*jret	= &retcell;
 static Cell	tempcell	= { OCELL, CTEMP, NULL, "", 0.0,
-				    NUM|STR|DONTFREE };
+				    NUM|STR|DONTFREE, NULL };
 
 Node	*curnode = NULL;	/* the node being executed, for debugging */
 
@@ -245,7 +246,7 @@ Cell *
 call(Node **a, int n)	/* function call.  very kludgy and fragile */
 {
 	static Cell newcopycell =
-		{ OCELL, CCOPY, 0, "", 0.0, NUM|STR|DONTFREE };
+		{ OCELL, CCOPY, 0, "", 0.0, NUM|STR|DONTFREE, NULL };
 	int i, ncall, ndef;
 	/* handles potential double freeing when fcn & param share a tempcell */
 	int freed = 0;
@@ -1288,12 +1289,12 @@ cat(Node **a, int q)	/* a[0] cat a[1] */
 
 	x = execute(a[0]);
 	n1 = strlen(getsval(x));
-	adjbuf(&s, &ssz, n1 + 1, recsize, 0, "cat1");
+	(void) adjbuf(&s, &ssz, n1 + 1, recsize, 0, "cat1");
 	(void) strncpy(s, x->sval, ssz);
 
 	y = execute(a[1]);
 	n2 = strlen(getsval(y));
-	adjbuf(&s, &ssz, n1 + n2 + 1, recsize, 0, "cat2");
+	(void) adjbuf(&s, &ssz, n1 + n2 + 1, recsize, 0, "cat2");
 	(void) strncpy(s + n1, y->sval, ssz - n1);
 
 	tempfree(x);
