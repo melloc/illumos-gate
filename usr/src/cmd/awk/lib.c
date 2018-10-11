@@ -100,8 +100,15 @@ initgetrec(void)
 	char *p;
 
 	for (i = 1; i < *ARGC; i++) {
-		if (!isclvar(p = getargv(i)))	/* find 1st real filename */
+		p = getargv(i); /* find 1st real filename */
+		if (p == NULL || *p == '\0') {  /* deleted or zapped */
+			argno++;
+			continue;
+		}
+		if (!isclvar(p)) {
+			(void) setsval(lookup("FILENAME", symtab), p);
 			return;
+		}
 		setclvar(p);	/* a commandline assignment before filename */
 		argno++;
 	}
@@ -137,11 +144,13 @@ getrec(char **pbuf, size_t *pbufsize)
 		dprintf(("argno=%d, file=|%s|\n", argno, file));
 		if (infile == NULL) {	/* have to open a new file */
 			file = getargv(argno);
-			if (*file == '\0') {	/* it's been zapped */
+			if (file == NULL || *file == '\0') {
+				/* deleted or zapped */
 				argno++;
 				continue;
 			}
-			if (isclvar(file)) {	/* a var=value arg */
+			if (isclvar(file)) {
+				/* a var=value arg */
 				setclvar(file);
 				argno++;
 				continue;
@@ -250,6 +259,8 @@ getargv(int n)
 	extern Array *ARGVtab;
 
 	(void) sprintf(temp, "%d", n);
+	if (lookup(temp, ARGVtab) == NULL)
+		return (NULL);
 	x = setsymtab(temp, "", 0.0, STR, ARGVtab);
 	s = getsval(x);
 	dprintf(("getargv(%d) returns |%s|\n", n, s));
