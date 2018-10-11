@@ -226,4 +226,19 @@ $AWK '{print x}' x='a
 b' $TEMP0 > $TEMP1 2> $TEMP2
 grep 'newline in string' $TEMP2 >/dev/null || fail 'BAD: T.errmsg newline in string'
 
+$AWK -safe 'BEGIN{"date" | getline}' > $TEMP0 2> $TEMP2
+grep 'cmd | getline is unsafe' $TEMP2 >/dev/null || fail 'BAD: T.errmsg cmd|getline unsafe'
+
+$AWK -safe 'BEGIN{print >"'$TEMP0'"}' > $TEMP0 2> $TEMP2
+grep 'print > is unsafe' $TEMP2 >/dev/null || fail 'BAD: T.errmsg print > unsafe'
+
+$AWK -safe 'BEGIN{print >> "'$TEMP0'"}' > $TEMP0 2> $TEMP2
+grep 'print >> is unsafe' $TEMP2 >/dev/null || fail 'BAD: T.errmsg print >> unsafe'
+
+$AWK -safe 'BEGIN{print | "'$TEMP0'"}' > $TEMP0 2> $TEMP2
+grep 'print | is unsafe' $TEMP2 >/dev/null || fail 'BAD: T.errmsg print | unsafe'
+
+$AWK -safe 'BEGIN {system("date")}' > $TEMP0 2> $TEMP2
+grep 'system is unsafe' $TEMP2 >/dev/null || fail 'BAD: T.errmsg system unsafe'
+
 exit $RESULT

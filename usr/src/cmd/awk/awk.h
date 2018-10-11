@@ -81,6 +81,7 @@ typedef	unsigned char uschar;
 #endif
 
 extern int	compile_time;	/* 1 if compiling, 0 if running */
+extern int	safe;		/* 0 => unsafe, 1 => safe */
 
 #define	FLD_INCR	64
 #define	LINE_INCR	256

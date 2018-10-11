@@ -76,6 +76,8 @@ static char	**pfile = NULL;	/* program filenames from -f's */
 static int	npfile = 0;	/* number of filenames */
 static int	curpfile = 0;	/* current filename */
 
+int	safe	= 0;	/* 1 => "safe" mode */
+
 int
 main(int argc, char *argv[], char *envp[])
 {
@@ -110,6 +112,10 @@ main(int argc, char *argv[], char *envp[])
 			break;
 		}
 		switch (argv[1][1]) {
+		case 's':
+			if (strcmp(argv[1], "-safe") == 0)
+				safe = 1;
+			break;
 		case 'f':	/* next argument is program filename */
 			argc--;
 			argv++;
@@ -175,7 +181,8 @@ main(int argc, char *argv[], char *envp[])
 	argv[0] = cmdname;	/* put prog name at front of arglist */
 	dprintf(("argc=%d, argv[0]=%s\n", argc, argv[0]));
 	arginit(argc, argv);
-	envinit(envp);
+	if (!safe)
+		envinit(envp);
 	(void) yyparse();
 	if (fs)
 		*FS = qstring(fs, '\0');

@@ -513,6 +513,8 @@ word(char *w)
 		yylval.i = kp->sub;
 		switch (kp->type) {	/* special handling */
 		case BLTIN:
+			if (kp->sub == FSYSTEM && safe)
+				SYNTAX("system is unsafe");
 			RET(kp->type);
 		case FUNC:
 			if (infunc)
