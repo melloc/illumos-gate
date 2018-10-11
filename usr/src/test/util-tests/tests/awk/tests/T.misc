@@ -138,6 +138,12 @@ function bug2(arg) {
 grep "can.t assign to foo" $TEMP0 >/dev/null || fail "BAD: T.misc foo bug"
 
 
+# This should be a syntax error
+$AWK '
+!x = y
+' 2> $TEMP0
+grep "syntax error" $TEMP0 >/dev/null || fail "BAD: T.misc syntax error !x=y fails"
+
 # This should print bbb
 $AWK '
 BEGIN { up[1] = "a"

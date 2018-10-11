@@ -92,13 +92,14 @@ static Node	*notnull(Node *);
 %token	<cp>	VAR IVAR VARNF CALL NUMBER STRING
 %token	<s>	REGEXPR
 
-%type	<p>	pas pattern ppattern plist pplist patlist prarg term
+%type	<p>	pas pattern ppattern plist pplist patlist prarg term re
 %type	<p>	pa_pat pa_stat pa_stats
 %type	<s>	reg_expr
 %type	<p>	simple_stmt opt_simple_stmt stmt stmtlist
 %type	<p>	var varname funcname varlist
-%type	<p>	for if while
-%type	<i>	pst opt_pst lbrace rparen comma nl opt_nl and bor
+%type	<p>	for if else while
+%type	<i>	do st
+%type	<i>	pst opt_pst lbrace rbrace rparen comma nl opt_nl and bor
 %type	<i>	subop print
 
 %right	ASGNOP
@@ -232,8 +233,6 @@ ppattern:
 		{ $$ = op2(BOR, notnull($1), notnull($3)); }
 	| ppattern and ppattern %prec AND
 		{ $$ = op2(AND, notnull($1), notnull($3)); }
-	| NOT ppattern
-		{ $$ = op1(NOT, notnull($2)); }
 	| ppattern MATCHOP reg_expr	{ $$ = op3($2, NIL, $1, (Node*)makedfa($3, 0)); }
 	| ppattern MATCHOP ppattern
 		{ if (constnode($3))
@@ -243,8 +242,7 @@ ppattern:
 	| ppattern IN varname		{ $$ = op2(INTEST, $1, makearr($3)); }
 	| '(' plist ')' IN varname	{ $$ = op2(INTEST, $2, makearr($5)); }
 	| ppattern term %prec CAT	{ $$ = op2(CAT, $1, $2); }
-	| reg_expr
-		{ $$ = op3(MATCH, NIL, rectonode(), (Node*)makedfa($1, 0)); }
+	| re
 	| term
 	;
 
@@ -256,8 +254,6 @@ pattern:
 		{ $$ = op2(BOR, notnull($1), notnull($3)); }
 	| pattern and pattern %prec AND
 		{ $$ = op2(AND, notnull($1), notnull($3)); }
-	| NOT pattern
-		{ $$ = op1(NOT, op2(NE,$2,celltonode(lookup("$zero&null",symtab),CCON))); }
 	| pattern EQ pattern		{ $$ = op2($2, $1, $3); }
 	| pattern GE pattern		{ $$ = op2($2, $1, $3); }
 	| pattern GT pattern		{ $$ = op2($2, $1, $3); }
@@ -275,8 +271,7 @@ pattern:
 	| pattern '|' GETLINE var	{ $$ = op3(GETLINE, $4, (Node*)$2, $1); }
 	| pattern '|' GETLINE		{ $$ = op3(GETLINE, (Node*)0, (Node*)$2, $1); }
 	| pattern term %prec CAT	{ $$ = op2(CAT, $1, $2); }
-	| reg_expr
-		{ $$ = op3(MATCH, NIL, rectonode(), (Node*)makedfa($1, 0)); }
+	| re
 	| term
 	;
 
@@ -306,6 +301,12 @@ pst:
 
 rbrace:
 	  '}' | rbrace NL
+	;
+
+re:
+	   reg_expr
+		{ $$ = op3(MATCH, NIL, rectonode(), (Node*)makedfa($1, 0)); }
+	| NOT re	{ $$ = op1(NOT, notnull($2)); }
 	;
 
 reg_expr:
@@ -373,6 +374,7 @@ term:
 	| term POWER term		{ $$ = op2(POWER, $1, $3); }
 	| '-' term %prec UMINUS		{ $$ = op1(UMINUS, $2); }
 	| '+' term %prec UMINUS		{ $$ = $2; }
+	| NOT term %prec UMINUS		{ $$ = op1(NOT, notnull($2)); }
 	| BLTIN '(' ')'			{ $$ = op2(BLTIN, itonp($1), rectonode()); }
 	| BLTIN '(' patlist ')'		{ $$ = op2(BLTIN, itonp($1), $3); }
 	| BLTIN				{ $$ = op2(BLTIN, itonp($1), rectonode()); }
