@@ -76,23 +76,24 @@ Node	*winner = NULL;		/* root of parse tree */
 
 static Cell	*tmps;		/* free temporary cells for execution */
 
-static Cell	truecell	= { OBOOL, BTRUE, 0, 0, 1.0, NUM };
+static Cell	truecell	= { OBOOL, BTRUE, NULL, NULL, 1.0, NUM };
 Cell	*True	= &truecell;
-static Cell	falsecell	= { OBOOL, BFALSE, 0, 0, 0.0, NUM };
+static Cell	falsecell	= { OBOOL, BFALSE, NULL, NULL, 0.0, NUM };
 Cell	*False	= &falsecell;
-static Cell	breakcell	= { OJUMP, JBREAK, 0, 0, 0.0, NUM };
+static Cell	breakcell	= { OJUMP, JBREAK, NULL, NULL, 0.0, NUM };
 Cell	*jbreak	= &breakcell;
-static Cell	contcell	= { OJUMP, JCONT, 0, 0, 0.0, NUM };
+static Cell	contcell	= { OJUMP, JCONT, NULL, NULL, 0.0, NUM };
 Cell	*jcont	= &contcell;
-static Cell	nextcell	= { OJUMP, JNEXT, 0, 0, 0.0, NUM };
+static Cell	nextcell	= { OJUMP, JNEXT, NULL, NULL, 0.0, NUM };
 Cell	*jnext	= &nextcell;
 static Cell	nextfilecell	= { OJUMP, JNEXTFILE, NULL, NULL, 0.0, NUM };
 Cell	*jnextfile	= &nextfilecell;
 static Cell	exitcell	= { OJUMP, JEXIT, NULL, NULL, 0.0, NUM };
 Cell	*jexit	= &exitcell;
-static Cell	retcell		= { OJUMP, JRET, 0, 0, 0.0, NUM };
+static Cell	retcell		= { OJUMP, JRET, NULL, NULL, 0.0, NUM };
 Cell	*jret	= &retcell;
-static Cell	tempcell	= { OCELL, CTEMP, 0, 0, 0.0, NUM };
+static Cell	tempcell	= { OCELL, CTEMP, NULL, "", 0.0,
+				    NUM|STR|DONTFREE };
 
 Node	*curnode = NULL;	/* the node being executed, for debugging */
 
