@@ -889,20 +889,23 @@ sindex(Node **a, int nnn)		/* index(a[0], a[1]) */
 	return (z);
 }
 
-void
-format(char **bufp, char *s, Node *a)
+/* printf-like conversions */
+int
+format(char **pbuf, int *pbufsize, const char *s, Node *a)
 {
 	char *fmt;
 	const char *os;
 	Cell *x;
 	int flag = 0, len;
-	char *buf;
-	size_t bufsize, fmtsize, cnt, tcnt, ret;
+	char *buf = *pbuf;
+	size_t bufsize = *pbufsize;
+	size_t fmtsz = recsize;
+	size_t cnt, tcnt, ret;
 
-	init_buf(&buf, &bufsize, LINE_INCR);
-	init_buf(&fmt, &fmtsize, LINE_INCR);
 	os = s;
 	cnt = 0;
+	if ((fmt = (char *)malloc(fmtsz)) == NULL)
+		FATAL("out of memory in format()");
 	while (*s) {
 		if (*s != '%') {
 			expand_buf(&buf, &bufsize, cnt);
@@ -916,7 +919,7 @@ format(char **bufp, char *s, Node *a)
 			continue;
 		}
 		for (tcnt = 0; ; s++) {
-			expand_buf(&fmt, &fmtsize, tcnt);
+			expand_buf(&fmt, &fmtsz, tcnt);
 			fmt[tcnt++] = *s;
 			if (*s == '\0')
 				break;
@@ -931,7 +934,7 @@ format(char **bufp, char *s, Node *a)
 				x = execute(a);
 				a = a->nnext;
 				tcnt--;
-				expand_buf(&fmt, &fmtsize, tcnt + 12);
+				expand_buf(&fmt, &fmtsz, tcnt + 12);
 				ret = sprintf(&fmt[tcnt], "%d",
 				    (int)getfval(x));
 				tcnt += ret;
@@ -949,7 +952,7 @@ format(char **bufp, char *s, Node *a)
 			if (*(s-1) == 'l')
 				break;
 			fmt[tcnt - 1] = 'l';
-			expand_buf(&fmt, &fmtsize, tcnt);
+			expand_buf(&fmt, &fmtsz, tcnt);
 			fmt[tcnt++] = 'd';
 			fmt[tcnt] = '\0';
 			break;
@@ -1007,14 +1010,22 @@ format(char **bufp, char *s, Node *a)
 				    fmt, getsval(x));
 				break;
 			case 'c':
-				if (isnum(x)) {
+				if (!isnum(x)) {
+					/*LINTED*/
+					ret = snprintf(&buf[cnt], len,
+					    fmt, getsval(x)[0]);
+					break;
+				}
+				if (getfval(x)) {
 					/*LINTED*/
 					ret = snprintf(&buf[cnt], len,
 					    fmt, (int)getfval(x));
 				} else {
-					/*LINTED*/
-					ret = snprintf(&buf[cnt], len,
-					    fmt, getsval(x)[0]);
+					/* explicit null byte */
+					buf[cnt] = '\0';
+					/* next output will start here */
+					buf[cnt + 1] = '\0';
+					ret = 1;
 				}
 				break;
 			default:
@@ -1029,11 +1040,12 @@ format(char **bufp, char *s, Node *a)
 		s++;
 	}
 	buf[cnt] = '\0';
+	free(fmt);
 	for (; a != NULL; a = a->nnext)	/* evaluate any remaining args */
 		(void) execute(a);
-	*bufp = tostring(buf);
-	free(buf);
-	free(fmt);
+	*pbuf = buf;
+	*pbufsize = bufsize;
+	return (cnt);
 }
 
 /*ARGSUSED*/
@@ -1043,10 +1055,14 @@ awksprintf(Node **a, int n)		/* sprintf(a[0]) */
 	Cell *x;
 	Node *y;
 	char *buf;
+	int bufsz = 3 * recsize;
 
+	if ((buf = (char *)malloc(bufsz)) == NULL)
+		FATAL("out of memory in awksprintf");
 	y = a[0]->nnext;
 	x = execute(a[0]);
-	format(&buf, getsval(x), y);
+	if (format(&buf, &bufsz, getsval(x), y) == -1)
+		FATAL("sprintf string %.30s... too long.  can't happen.", buf);
 	tempfree(x);
 	x = gettemp();
 	x->sval = buf;
@@ -1064,18 +1080,23 @@ awkprintf(Node **a, int n)		/* printf */
 	Cell *x;
 	Node *y;
 	char *buf;
+	int len;
+	int bufsz = 3 * recsize;
 
+	if ((buf = (char *)malloc(bufsz)) == NULL)
+		FATAL("out of memory in awkprintf");
 	y = a[0]->nnext;
 	x = execute(a[0]);
-	format(&buf, getsval(x), y);
+	if ((len = format(&buf, &bufsz, getsval(x), y)) == -1)
+		FATAL("printf string %.30s... too long. can't happen.", buf);
 	tempfree(x);
 	if (a[1] == NULL) {
-		(void) fputs(buf, stdout);
+		(void) fwrite(buf, len, 1, stdout);
 		if (ferror(stdout))
 			FATAL("write error on stdout");
 	} else {
 		fp = redirect(ptoi(a[1]), a[2]);
-		(void) fputs(buf, fp);
+		(void) fwrite(buf, len, 1, fp);
 		(void) fflush(fp);
 		if (ferror(fp))
 			FATAL("write error on %s", filename(fp));

@@ -431,6 +431,12 @@ $AWK '"' 2> $TEMP0
 grep "non-terminated" $TEMP0 >/dev/null || fail "BAD: T.misc bare quote fails"
 
 
+# %c of 0 is explicit null byte
+
+echo '3' > $TEMP1
+$AWK 'BEGIN {printf("%c%c\n", 0, 0) }' | wc | $AWK '{print $3}' > $TEMP2
+cmp -s $TEMP1 $TEMP2 || fail 'BAD: T.misc null byte'
+
 # non-terminated RE
 
 $AWK /xyz > $TEMP0 2>&1
