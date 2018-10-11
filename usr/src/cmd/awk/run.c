@@ -437,10 +437,13 @@ awkgetline(Node **a, int n)	/* get next line from specific input */
 {
 	/* a[0] is variable, a[1] is operator, a[2] is filename */
 	Cell *r, *x;
-	char *buf;
 	FILE *fp;
-	size_t len;
+	char *buf;
+	size_t bufsize = recsize;
 	int mode;
+
+	if ((buf = (char *)malloc(bufsize)) == NULL)
+		FATAL("out of memory in getline");
 
 	(void) fflush(stdout);	/* in case someone is waiting for a prompt */
 	r = gettemp();
@@ -451,38 +454,36 @@ awkgetline(Node **a, int n)	/* get next line from specific input */
 			mode = LE;	/* arbitrary flag */
 		fp = openfile(mode, getsval(x));
 		tempfree(x);
-		buf = NULL;
 		if (fp == NULL)
 			n = -1;
 		else
-			n = readrec(&buf, &len, fp);
-		if (n > 0) {
-			if (a[0] != NULL) {	/* getline var <file */
-				(void) setsval(execute(a[0]), buf);
-			} else {			/* getline <file */
-				if (!(recloc->tval & DONTFREE))
-					xfree(recloc->sval);
-				expand_buf(&record, &recsize, len);
-				(void) memcpy(record, buf, len);
-				record[len] = '\0';
-				recloc->sval = record;
-				recloc->tval = REC | STR | DONTFREE;
-				donerec = 1; donefld = 0;
+			n = readrec(&buf, &bufsize, fp);
+		/*LINTED if*/
+		if (n <= 0) {
+			;
+		} else if (a[0] != NULL) {	/* getline var <file */
+			x = execute(a[0]);
+			(void) setsval(x, buf);
+			tempfree(x);
+		} else {			/* getline <file */
+			(void) setsval(recloc, buf);
+			if (is_number(recloc->sval)) {
+				recloc->fval = atof(recloc->sval);
+				recloc->tval |= NUM;
 			}
 		}
-		if (buf != NULL)
-			free(buf);
 	} else {			/* bare getline; use current input */
 		if (a[0] == NULL)	/* getline */
 			n = getrec(&record, &recsize);
 		else {			/* getline var */
-			init_buf(&buf, &len, LINE_INCR);
-			n = getrec(&buf, &len);
-			(void) setsval(execute(a[0]), buf);
-			free(buf);
+			n = getrec(&buf, &bufsize);
+			x = execute(a[0]);
+			(void) setsval(x, buf);
+			tempfree(x);
 		}
 	}
 	(void) setfval(r, (Awkfloat)n);
+	free(buf);
 	return (r);
 }
 
