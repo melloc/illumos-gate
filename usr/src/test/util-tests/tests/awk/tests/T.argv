@@ -134,4 +134,12 @@ echo 'test.temp.1
 test.temp.3' > $TEMP5
 diff $TEMP4 $TEMP5 || fail 'BAD: T.argv zap ARGV[2]'
 
+echo hi > $TEMP1 ; mv $TEMP1 $TEMP2
+$AWK 'BEGIN { ARGV[1] = "'$TEMP2'" ; print FILENAME }
+             { print FILENAME }' $TEMP1 > $TEMP3
+echo "
+$TEMP2" > $TEMP4
+diff $TEMP3 $TEMP4 || fail 'BAD: T.argv startup FILENAME'
+	# assumes that startup FILENAME is ""
+
 exit $RESULT

@@ -125,7 +125,7 @@ syminit(void)	/* initialize symbol table with builtin vars */
 	    STR|DONTFREE, symtab)->sval;
 	CONVFMT = &setsymtab("CONVFMT", "%.6g", 0.0,
 	    STR|DONTFREE, symtab)->sval;
-	FILENAME = &setsymtab("FILENAME", "-", 0.0,
+	FILENAME = &setsymtab("FILENAME", "", 0.0,
 	    STR|DONTFREE, symtab)->sval;
 	nfloc = setsymtab("NF", "", 0.0, NUM, symtab);
 	NF = &nfloc->fval;
@@ -150,14 +150,6 @@ arginit(int ac, char **av)	/* set up ARGV and ARGC */
 	int i;
 	char temp[50];
 
-	/* first make FILENAME first real argument */
-	for (i = 1; i < ac; i++) {
-		if (!isclvar(av[i])) {
-			(void) setsval(lookup("FILENAME", symtab),
-			    av[i]);
-			break;
-		}
-	}
 	ARGC = &setsymtab("ARGC", "", (Awkfloat)ac, NUM, symtab)->fval;
 	cp = setsymtab("ARGV", "", 0.0, ARR, symtab);
 	ARGVtab = makesymtab(NSYMTAB);	/* could be (int) ARGC as well */
