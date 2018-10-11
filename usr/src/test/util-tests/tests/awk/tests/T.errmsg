@@ -39,6 +39,15 @@ $1 ~ /^#/ {
 illegal primary in regular expression
 /(/
 
+illegal break, continue, next or nextfile from BEGIN
+BEGIN { nextfile }
+
+illegal break, continue, next or nextfile from END
+END { nextfile }
+
+nextfile is illegal inside a function
+function foo() { nextfile }
+
 duplicate argument
 function f(i,j,i) { return i }
 

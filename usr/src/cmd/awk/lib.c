@@ -51,6 +51,9 @@
 /*	Copyright (c) 1984, 1986, 1987, 1988, 1989 AT&T	*/
 /*	  All Rights Reserved  	*/
 
+/*	Copyright (c) Lucent Technologies 1997	*/
+/*	  All Rights Reserved  	*/
+
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
@@ -170,6 +173,15 @@ getrec(char **bufp, size_t *bufsizep)
 		argno++;
 	}
 	return (0);	/* true end of file */
+}
+
+void
+nextfile(void)
+{
+	if (infile != NULL && infile != stdin)
+		(void) fclose(infile);
+	infile = NULL;
+	argno++;
 }
 
 int

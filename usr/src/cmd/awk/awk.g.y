@@ -86,7 +86,7 @@ static Node	*notnull(Node *);
 %token	<i>	FINAL DOT ALL CCL NCCL CHAR OR STAR QUEST PLUS
 %token	<i>	AND BOR APPEND EQ GE GT LE LT NE IN
 %token	<i>	ARG BLTIN BREAK CLOSE CONTINUE DELETE DO EXIT FOR FUNC
-%token	<i>	SUB GSUB IF INDEX LSUBSTR MATCHFCN NEXT
+%token	<i>	SUB GSUB IF INDEX LSUBSTR MATCHFCN NEXT NEXTFILE
 %token	<i>	ADD MINUS MULT DIVIDE MOD
 %token	<i>	ASSIGN ASGNOP ADDEQ SUBEQ MULTEQ DIVEQ MODEQ POWEQ
 %token	<i>	PRINT PRINTF SPRINTF
@@ -353,6 +353,9 @@ stmt:
 	| NEXT st	{ if (infunc)
 				SYNTAX("next is illegal inside a function");
 			  $$ = stat1(NEXT, NIL); }
+	| NEXTFILE st	{ if (infunc)
+				SYNTAX("nextfile is illegal inside a function");
+			  $$ = stat1(NEXTFILE, NIL); }
 	| RETURN pattern st	{ $$ = stat1(RETURN, $2); }
 	| RETURN st		{ $$ = stat1(RETURN, NIL); }
 	| simple_stmt st

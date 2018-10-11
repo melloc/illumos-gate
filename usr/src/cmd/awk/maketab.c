@@ -122,6 +122,7 @@ struct xx {
 	{ DO, "dostat", "do" },
 	{ IN, "instat", "instat" },
 	{ NEXT, "jump", "next" },
+	{ NEXTFILE, "jump", "nextfile" },
 	{ EXIT, "jump", "exit" },
 	{ BREAK, "jump", "break" },
 	{ CONTINUE, "jump", "continue" },

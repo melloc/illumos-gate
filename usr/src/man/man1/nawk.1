@@ -884,6 +884,7 @@ continue
 print [ \fIexpression-list\fR ] [ >\fIexpression\fR ]
 printf format [ ,\fIexpression-list\fR ] [ >\fIexpression\fR ]
 next              # skip remaining patterns on this input line
+nextfile          # skip remaining patterns on this input file
 exit [expr] # skip the rest of the input; exit status is expr
 return [expr]
 .fi
@@ -899,6 +900,12 @@ executed sequentially in the order that they appear.
 The \fBnext\fR statement causes all further processing of the current input
 record to be abandoned. The behavior is undefined if a \fBnext\fR statement
 appears or is invoked in a \fBBEGIN\fR or \fBEND\fR action.
+.sp
+.LP
+The \fBnextfile\fR statement is similar to \fBnext\fR, but also skips all other
+records in the current file, and moves on to processing the next input file if
+available (or exits the program if there are none). (Note that this keyword is
+not supported by \fB/usr/xpg4/bin/awk\fR.)
 .sp
 .LP
 The \fBexit\fR statement invokes all \fBEND\fR actions in the order in which

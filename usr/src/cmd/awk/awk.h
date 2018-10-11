@@ -221,6 +221,7 @@ extern Node	*nullnode;
 #define	JBREAK	23
 #define	JCONT	24
 #define	JRET	25
+#define	JNEXTFILE	26
 
 /* node types */
 #define	NVALUE	1
@@ -251,7 +252,7 @@ extern	Node	*makearr(Node *);
 #define	isexit(n)	((n)->csub == JEXIT)
 #define	isbreak(n)	((n)->csub == JBREAK)
 #define	iscont(n)	((n)->csub == JCONT)
-#define	isnext(n)	((n)->csub == JNEXT)
+#define	isnext(n)	((n)->csub == JNEXT || (n)->csub == JNEXTFILE)
 #define	isret(n)	((n)->csub == JRET)
 #define	isrec(n)	((n)->tval & REC)
 #define	isfld(n)	((n)->tval & FLD)
@@ -323,6 +324,7 @@ extern	void	SYNTAX(const char *, ...);
 extern	void	FATAL(const char *, ...) __attribute__((__noreturn__));
 extern	void	WARNING(const char *, ...);
 extern	void	error(void);
+extern	void	nextfile(void);
 
 extern	int	isclvar(const char *);
 extern	int	is_number(const char *);

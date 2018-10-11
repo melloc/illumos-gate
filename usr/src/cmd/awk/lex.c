@@ -71,6 +71,7 @@ Keyword keywords[] = {	/* keep sorted: binary searched */
 	{ "log",	FLOG,		BLTIN },
 	{ "match",	MATCHFCN,	MATCHFCN },
 	{ "next",	NEXT,		NEXT },
+	{ "nextfile",	NEXTFILE,	NEXTFILE },
 	{ "print",	PRINT,		PRINT },
 	{ "printf",	PRINTF,		PRINTF },
 	{ "rand",	FRAND,		BLTIN },

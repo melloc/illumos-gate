@@ -86,7 +86,9 @@ static Cell	contcell	= { OJUMP, JCONT, 0, 0, 0.0, NUM };
 Cell	*jcont	= &contcell;
 static Cell	nextcell	= { OJUMP, JNEXT, 0, 0, 0.0, NUM };
 Cell	*jnext	= &nextcell;
-static Cell	exitcell	= { OJUMP, JEXIT, 0, 0, 0.0, NUM };
+static Cell	nextfilecell	= { OJUMP, JNEXTFILE, NULL, NULL, 0.0, NUM };
+Cell	*jnextfile	= &nextfilecell;
+static Cell	exitcell	= { OJUMP, JEXIT, NULL, NULL, 0.0, NUM };
 Cell	*jexit	= &exitcell;
 static Cell	retcell		= { OJUMP, JRET, 0, 0, 0.0, NUM };
 Cell	*jret	= &retcell;
@@ -198,7 +200,8 @@ program(Node **a, int n)
 		if (isexit(x))
 			return (True);
 		if (isjump(x)) {
-			FATAL("illegal break, continue, or next from BEGIN");
+			FATAL("illegal break, continue, next or nextfile "
+			    "from BEGIN");
 		}
 		tempfree(x);
 	}
@@ -215,7 +218,8 @@ ex:
 	if (a[2]) {		/* END */
 		x = execute(a[2]);
 		if (isbreak(x) || isnext(x) || iscont(x))
-			FATAL("illegal break, continue, or next from END");
+			FATAL("illegal break, continue, next or nextfile "
+			    "from END");
 		tempfree(x);
 	}
 ex1:
@@ -414,6 +418,9 @@ jump(Node **a, int n)	/* break, continue, next, nextfile, return */
 		return (jret);
 	case NEXT:
 		return (jnext);
+	case NEXTFILE:
+		nextfile();
+		return (jnextfile);
 	case BREAK:
 		return (jbreak);
 	case CONTINUE:
