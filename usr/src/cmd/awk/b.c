@@ -70,11 +70,12 @@
 #define	parent(v)	(v)->nnext
 
 #define	LEAF	case CCL: case NCCL: case CHAR: case DOT: case FINAL: case ALL:
+#define	ELEAF	case EMPTYRE:		/* empty string in regexp */
 #define	UNARY	case STAR: case PLUS: case QUEST:
 
 /*
  * encoding in tree Nodes:
- *	leaf (CCL, NCCL, CHAR, DOT, FINAL, ALL):
+ *	leaf (CCL, NCCL, CHAR, DOT, FINAL, ALL, EMPTYRE):
  *		left is index, right contains value or pointer to value
  *	unary (STAR, PLUS, QUEST): left is child, right is null
  *	binary (CAT, OR): left and right are children
@@ -232,6 +233,7 @@ void
 penter(Node *p)	/* set up parent pointers and leaf indices */
 {
 	switch (type(p)) {
+	ELEAF
 	LEAF
 		info(p) = poscnt;
 		poscnt++;
@@ -257,6 +259,7 @@ static void
 freetr(Node *p)	/* free parse tree */
 {
 	switch (type(p)) {
+	ELEAF
 	LEAF
 		xfree(p);
 		break;
@@ -418,6 +421,7 @@ cfoll(fa *f, Node *v)
 	int *p;
 
 	switch (type(v)) {
+	ELEAF
 	LEAF
 		f->re[info(v)].ltype = type(v);
 		f->re[info(v)].lval.np = right(v);
@@ -460,11 +464,16 @@ first(Node *p)
 	int b, lp;
 
 	switch (type(p)) {
+	ELEAF
 	LEAF
 		lp = info(p);	/* look for high-water mark of subscripts */
 		while (setcnt >= maxsetvec || lp >= maxsetvec) {
 			/* guessing here! */
 			growvec("out of space in first()");
+		}
+		if (type(p) == EMPTYRE) {
+			setvec[lp] = 0;
+			return (0);
 		}
 		if (setvec[lp] != 1) {
 			setvec[lp] = 1;
@@ -697,8 +706,9 @@ reparse(const char *p)
 	/* prestr points to string to be parsed */
 	lastre = prestr = (uschar *)p;
 	rtok = relex();
+	/* GNU compatibility: an empty regexp matches anything */
 	if (rtok == '\0') {
-		FATAL("empty regular expression");
+		return (op2(EMPTYRE, NIL, NIL));
 	}
 	np = regexp();
 	if (rtok != '\0')
@@ -724,6 +734,9 @@ primary(void)
 		rtok = relex();
 		return (unary(np));
 	case ALL:
+		rtok = relex();
+		return (unary(op2(ALL, NIL, NIL)));
+	case EMPTYRE:
 		rtok = relex();
 		return (unary(op2(ALL, NIL, NIL)));
 	case DOT:
@@ -774,7 +787,14 @@ static Node *
 concat(Node *np)
 {
 	switch (rtok) {
-	case CHAR: case DOT: case ALL: case CCL: case NCCL: case '$': case '(':
+	case EMPTYRE:
+	case CHAR:
+	case DOT:
+	case ALL:
+	case CCL:
+	case NCCL:
+	case '$':
+	case '(':
 		return (concat(op2(CAT, np, primary())));
 	default:
 		return (np);
@@ -960,6 +980,7 @@ cgoto(fa *f, int s, int c)
 			if ((k == CHAR && c == ptoi(f->re[p[i]].lval.np)) ||
 			    (k == DOT && c != 0 && c != HAT) ||
 			    (k == ALL && c != 0) ||
+			    (k == EMPTYRE && c != 0) ||
 			    (k == CCL &&
 			    member(c, (char *)f->re[p[i]].lval.up)) ||
 			    (k == NCCL &&

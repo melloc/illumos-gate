@@ -68,6 +68,20 @@ diff $TEMP0 $TEMP1 || fail 'BAD: T.split 1'
 
 # assumes same test.temp.0!  bad design
 
+
+$AWK '
+{	n = split($0, x, //)
+	m = length($0)
+	if (m != n) print "error 1", NR
+	s = ""
+	for (i = 1; i <= m; i++)
+		s = s x[i]
+	if (s != $0) print "error 2", NR
+	print s
+}' $TEMP0 > $TEMP1
+
+diff $TEMP0 $TEMP1 || fail 'BAD: T.split //'
+
 $AWK '
 BEGIN { FS = "" }
 {	n = split($0, x)	# will be split with FS

@@ -49,6 +49,10 @@ END {
 	exit ecode
 }
 ' <<\!!!!
+	~	a
+		aa
+		aaa
+		""
 a	~	a
 		ba
 		bab
