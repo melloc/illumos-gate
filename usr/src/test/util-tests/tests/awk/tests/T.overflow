@@ -93,4 +93,8 @@ BEGIN {
 }' > $TEMP2
 cmp -s $TEMP1 $TEMP2 || fail 'BAD: T.overflow big array'
 
+echo x > $TEMP1
+$AWK '{print $40000000000000}' < $TEMP1 > $TEMP2 2> $TEMP0
+grep "out of range field" $TEMP0 >/dev/null || fail "BAD: T.overflow \$400000"
+
 exit $RESULT
