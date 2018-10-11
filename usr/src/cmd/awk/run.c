@@ -1634,7 +1634,13 @@ bltin(Node **a, int n)	/* builtin functions. a[0] is type, a[1] is arg list */
 	nextarg = a[1]->nnext;
 	switch (t) {
 	case FLENGTH:
-		u = (Awkfloat)strlen(getsval(x)); break;
+		if (isarr(x)) {
+			/* LINTED align */
+			u = ((Array *)x->sval)->nelem;
+		} else {
+			u = strlen(getsval(x));
+		}
+		break;
 	case FLOG:
 		u = errcheck(log(getfval(x)), "log"); break;
 	case FINT:

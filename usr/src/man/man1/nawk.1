@@ -1183,12 +1183,15 @@ string \fIt\fR first occurs, or zero if it does not occur at all.
 .sp
 .ne 2
 .na
-\fB\fBlength\fR[([\fIs\fR])]\fR
+\fB\fBlength\fR[([\fIv\fR])]\fR
 .ad
 .sp .6
 .RS 4n
-Return the length, in characters, of its argument taken as a string, or of the
-whole record, \fB$0\fR, if there is no argument.
+Given no argument, this function returns the length of the whole record,
+\fB$0\fR. If given an array as an argument (and using \fB/usr/bin/nawk\fR),
+then this returns the number of elements it contains. Otherwise, this function
+interprets the argument as a string (performing any needed conversions) and
+returns its length in characters.
 .RE
 
 .sp
