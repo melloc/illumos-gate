@@ -141,6 +141,15 @@ echo '0
 3' > $TEMP2
 diff $TEMP1 $TEMP2 || fail 'BAD: T.split null 3rd arg'
 
+rm -f $WORKDIR/test.temp*
+$AWK 'BEGIN {
+  a[1]="a b"
+  print split(a[1],a),a[1],a[2]
+}' > $TEMP1
+
+echo '2 a b' > $TEMP2
+diff $TEMP1 $TEMP2 || fail 'BAD: T.split(a[1],a)'
+
 $AWK 'BEGIN {
   a = "cat\n\n\ndog";
   split(a, b, "[\r\n]+");

@@ -1317,14 +1317,14 @@ dopa2(Node **a, int n)	/* a[0], a[1] { a[2] } */
 Cell *
 split(Node **a, int nnn)	/* split(a[0], a[1], a[2]); a[3] is type */
 {
-	Cell *x, *y, *ap;
-	char *s;
+	Cell *x = NULL, *y, *ap;
+	char *s, *origs;
 	int sep;
 	char *t, temp, num[50], *fs = NULL;
 	int n, tempstat, arg3type;
 
 	y = execute(a[0]);	/* source string */
-	s = getsval(y);
+	origs = s = strdup(getsval(y));
 	arg3type = ptoi(a[3]);
 	if (a[2] == NULL)		/* fs string */
 		fs = *FS;
@@ -1478,6 +1478,7 @@ spdone:
 	}
 	tempfree(ap);
 	tempfree(y);
+	free(origs);
 	if (a[2] != NULL && arg3type == STRING) {
 		tempfree(x);
 	}
