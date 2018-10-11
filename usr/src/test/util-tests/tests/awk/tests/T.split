@@ -96,6 +96,23 @@ BEGIN { FS = "" }
 
 diff $TEMP0 $TEMP2 || fail 'BAD: T.split 2'
 
+# assumes same test.temp.0!
+
+$AWK '
+BEGIN { FS = "" }
+{	n = NF
+	m = length($0)
+	if (m != n) print "error 1", NR
+	s = ""
+	for (i = 1; i <= m; i++)
+		s = s $i
+	if (s != $0) print "error 2", NR
+	print s
+}' $TEMP0 > $TEMP2
+
+diff $TEMP0 $TEMP2 || fail 'BAD: T.split 3'
+
+
 rm -f $WORKDIR/test.temp*
 
 echo '

@@ -314,7 +314,29 @@ fldbld(void)	/* create fields from current record */
 			*fr++ = 0;
 		}
 		*fr = 0;
+	} else if ((sep = *inputFS) == 0) {
+		/* new: FS="" => 1 char/field */
+		for (i = 0; *r != '\0'; r++) {
+			char buf[2];
+			i++;
+			p = getfld(i);
+			if (freeable(p))
+				xfree(p->sval);
+			buf[0] = *r;
+			buf[1] = '\0';
+			p->sval = tostring(buf);
+			p->tval = FLD | STR;
+		}
+		*fr = '\0';
 	} else if (*r != '\0') {	/* if 0, it's a null field */
+		/*
+		 * subtlecase : if length(FS) == 1 && length(RS > 0)
+		 * \n is NOT a field separator (cf awk book 61,84).
+		 * this variable is tested in the inner while loop.
+		 */
+		int rtest = '\n';  /* normal case */
+		if (strlen(*RS) > 0)
+			rtest = '\0';
 		for (;;) {
 			i++;
 			p = getfld(i);
@@ -323,7 +345,7 @@ fldbld(void)	/* create fields from current record */
 			p->sval = fr;
 			p->tval = FLD | STR | DONTFREE;
 			/* \n is always a separator */
-			while (*r != sep && *r != '\n' && *r != '\0')
+			while (*r != sep && *r != rtest && *r != '\0')
 				*fr++ = *r++;
 			*fr++ = '\0';
 			if (*r++ == '\0')
