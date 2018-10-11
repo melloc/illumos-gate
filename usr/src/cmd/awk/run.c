@@ -1844,6 +1844,7 @@ closefile(Node **a, int n)
 
 	x = execute(a[0]);
 	(void) getsval(x);
+	stat = -1;
 	for (i = 0; i < FOPEN_MAX; i++) {
 		if (files[i].fname && strcmp(x->sval, files[i].fname) == 0) {
 			if (ferror(files[i].fp)) {
@@ -1866,7 +1867,9 @@ closefile(Node **a, int n)
 		}
 	}
 	tempfree(x);
-	return (True);
+	x = gettemp();
+	setfval(x, (Awkfloat) stat);
+	return (x);
 }
 
 static void
