@@ -108,13 +108,19 @@ initgetrec(void)
 	infile = stdin;		/* no filenames, so use stdin */
 }
 
+static int firsttime = 1;
+
+/*
+ * get next input record
+ * note: cares whether buf == record
+ */
 int
-getrec(char **bufp, size_t *bufsizep)
+getrec(char **pbuf, size_t *pbufsize)
 {
 	int c;
-	static int firsttime = 1;
-	char	*buf, *nbuf;
-	size_t	len;
+	char	*buf = *pbuf, *nbuf;
+	uschar saveb0;
+	size_t	len, savebufsize = *pbufsize;
 
 	if (firsttime) {
 		firsttime = 0;
@@ -122,8 +128,11 @@ getrec(char **bufp, size_t *bufsizep)
 	}
 	dprintf(("RS=<%s>, FS=<%s>, ARGC=%f, FILENAME=%s\n",
 	    *RS, *FS, *ARGC, *FILENAME));
-	donefld = 0;
-	donerec = 1;
+	if (pbuf == &record) {
+		donefld = 0;
+		donerec = 1;
+	}
+	saveb0 = buf[0];
 	while (argno < *ARGC || infile == stdin) {
 		dprintf(("argno=%d, file=|%s|\n", argno, file));
 		if (infile == NULL) {	/* have to open a new file */
@@ -146,14 +155,14 @@ getrec(char **bufp, size_t *bufsizep)
 			(void) setfval(fnrloc, 0.0);
 		}
 		c = readrec(&nbuf, &len, infile);
-		expand_buf(bufp, bufsizep, len);
-		buf = *bufp;
+		expand_buf(pbuf, pbufsize, len);
+		buf = *pbuf;
 		(void) memcpy(buf, nbuf, len);
 		buf[len] = '\0';
 		free(nbuf);
 
 		if (c != 0 || buf[0] != '\0') {	/* normal record */
-			if (bufp == &record) {
+			if (pbuf == &record) {
 				if (freeable(recloc))
 					xfree(recloc->sval);
 				recloc->sval = record;
@@ -174,6 +183,9 @@ getrec(char **bufp, size_t *bufsizep)
 		infile = NULL;
 		argno++;
 	}
+	buf[0] = saveb0;
+	*pbuf = buf;
+	*pbufsize = savebufsize;
 	return (0);	/* true end of file */
 }
 
