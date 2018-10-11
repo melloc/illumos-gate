@@ -1331,6 +1331,15 @@ split(Node **a, int nnn)	/* split(a[0], a[1], a[2]); a[3] is type */
 	ap->sval = (char *)makesymtab(NSYMTAB);
 
 	n = 0;
+	if (arg3type == REGEXPR && strlen((char *)((fa*)a[2])->restr) == 0) {
+		/*
+		 * split(s, a, //); have to arrange things such that it looks
+		 * like an empty separator.
+		 */
+		arg3type = 0;
+		fs = "";
+		sep = 0;
+	}
 	if (*s != '\0' && (strlen(fs) > 1 || arg3type == REGEXPR)) {
 		/* reg expr */
 		fa *pfa;
@@ -1410,6 +1419,23 @@ spdone:
 			*s = temp;
 			if (*s != '\0')
 				s++;
+		}
+	} else if (sep == '\0') {	/* split(s, a, "") => 1 char/elem */
+		for (n = 0; *s != 0; s++) {
+			char buf[2];
+			n++;
+			(void) sprintf(num, "%d", n);
+			buf[0] = *s;
+			buf[1] = '\0';
+			if (isdigit((uschar)buf[0])) {
+				(void) setsymtab(num, buf, atof(buf),
+				    /*LINTED align*/
+				    STR|NUM, (Array *)ap->sval);
+			} else {
+				(void) setsymtab(num, buf, 0.0,
+				    /*LINTED align*/
+				    STR, (Array *)ap->sval);
+			}
 		}
 	} else if (*s != '\0') {
 		for (;;) {
