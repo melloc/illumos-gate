@@ -165,9 +165,22 @@ main(int argc, char *argv[], char *envp[])
 				WARNING("field separator FS is empty");
 			break;
 		case 'v':	/* -v a=1 to be done NOW.  one -v for each */
-			if (argv[1][2] == '\0' && --argc > 1 &&
-			    isclvar((++argv)[1]))
-				setclvar(argv[1]);
+			if (argv[1][2] != 0) {  /* arg is -vsomething */
+				if (isclvar(&argv[1][2]))
+					setclvar(&argv[1][2]);
+				else
+					FATAL("invalid -v option argument: %s",
+					    &argv[1][2]);
+			} else {		/* arg is -v something */
+				argc--; argv++;
+				if (argc <= 1)
+					FATAL("no variable name");
+				if (isclvar(argv[1]))
+					setclvar(argv[1]);
+				else
+					FATAL("invalid -v option argument: %s",
+					    argv[1]);
+			}
 			break;
 		case 'd':
 			dbg = atoi(&argv[1][2]);
