@@ -126,14 +126,22 @@ main(int argc, char *argv[], char *envp[])
 				safe = 1;
 			break;
 		case 'f':	/* next argument is program filename */
-			argc--;
-			argv++;
-			if (argc <= 1)
-				FATAL("no program filename");
-			pfile = realloc(pfile, sizeof (char *) * (npfile + 1));
-			if (pfile == NULL)
-				FATAL("out of space in main");
-			pfile[npfile++] = argv[1];
+			if (argv[1][2] != 0) {  /* arg is -fsomething */
+				pfile = realloc(pfile,
+				    sizeof (char *) * (npfile + 1));
+				if (pfile == NULL)
+					FATAL("out of space in main");
+				pfile[npfile++] = &argv[1][2];
+			} else {		/* arg is -f something */
+				argc--; argv++;
+				if (argc <= 1)
+					FATAL("no program filename");
+				pfile = realloc(pfile,
+				    sizeof (char *) * (npfile + 1));
+				if (pfile == NULL)
+					FATAL("out of space in main");
+				pfile[npfile++] = argv[1];
+			}
 			break;
 		case 'F':	/* set field separator */
 			if (argv[1][2] != 0) {	/* arg is -Fsomething */
