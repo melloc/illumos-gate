@@ -540,33 +540,45 @@ awkdelete(Node **a, int n)	/* a[0] is symtab, a[1] is list of subscripts */
 {
 	Cell *x, *y;
 	Node *np;
-	char *buf, *s;
-	size_t bsize, tlen, slen, len;
+	char *s;
+	size_t nsub = strlen(*SUBSEP);
+	size_t tlen = 0, len;
 
 	x = execute(a[0]);	/* Cell* for symbol table */
 	if (!isarr(x))
 		return (True);
-	init_buf(&buf, &bsize, LINE_INCR);
-	buf[0] = '\0';
-	tlen = 0;
-	slen = strlen(*SUBSEP);
-	for (np = a[1]; np != NULL; np = np->nnext) {
-		y = execute(np);	/* subscript */
-		s = getsval(y);
-		len = strlen(s);
-		expand_buf(&buf, &bsize, tlen + len + slen);
-		(void) memcpy(&buf[tlen], s, len);
-		tlen += len;
-		if (np->nnext) {
-			(void) memcpy(&buf[tlen], *SUBSEP, slen);
-			tlen += slen;
+	if (a[1] == NULL) {	/* delete the elements, not the table */
+		freesymtab(x);
+		x->tval &= ~STR;
+		x->tval |= ARR;
+		x->sval = (char *)makesymtab(NSYMTAB);
+	} else {
+		size_t bufsz = recsize;
+		char *buf;
+		if ((buf = (char *)malloc(bufsz)) == NULL)
+			FATAL("out of memory in awkdelete");
+		buf[0] = '\0';
+		for (np = a[1]; np != NULL; np = np->nnext) {
+			y = execute(np);	/* subscript */
+			s = getsval(y);
+			len = strlen(s);
+			if (!adjbuf(&buf, &bufsz, tlen + len + nsub, recsize, 0,
+			    "awkdelete"))
+				FATAL("out of memory deleting %s[%s...]",
+				    x->nval, buf);
+			(void) memcpy(&buf[tlen], s, len);
+			tlen += len;
+			if (np->nnext) {
+				(void) memcpy(&buf[tlen], *SUBSEP, nsub);
+				tlen += nsub;
+			}
+			buf[tlen] = '\0';
+			tempfree(y);
 		}
-		buf[tlen] = '\0';
-		tempfree(y);
+		freeelem(x, buf);
+		free(buf);
 	}
-	freeelem(x, buf);
 	tempfree(x);
-	free(buf);
 	return (True);
 }
 

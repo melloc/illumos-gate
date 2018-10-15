@@ -42,7 +42,7 @@ GNU_FILES =	\
 	$(GNU_AWK) $(GNU_AWK:%.awk=%.ok) \
 	$(GNU_KSH) $(GNU_KSH:%.sh=%.ok) \
 	$(GNU_IN) $(GNU_KSH:%.in=%.awk) \
-	out1.ok out2.ok out3.ok # Used by messages.sh
+	arynocls.data out1.ok out2.ok out3.ok # arynocls.awk & messages.sh data
 
 SYN_FILES :sh= (cd syn; print *.awk)
 

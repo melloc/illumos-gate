@@ -326,7 +326,7 @@ simple_stmt:
 	| print prarg GT term		{ $$ = stat3($1, $2, (Node *) $3, $4); }
 	| print prarg			{ $$ = stat3($1, $2, NIL, NIL); }
 	| DELETE varname '[' patlist ']' { $$ = stat2(DELETE, makearr($2), $4); }
-	| DELETE varname		{ yyclearin; SYNTAX("you can only delete array[element]"); $$ = stat1(DELETE, $2); }
+	| DELETE varname		{ $$ = stat2(DELETE, makearr($2), 0); }
 	| pattern			{ $$ = exptostat($1); }
 	| error				{ yyclearin; SYNTAX("illegal statement"); }
 	;
