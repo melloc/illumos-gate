@@ -448,4 +448,12 @@ $AWK 'END { print NF, $0 }' $TEMP0 > $TEMP1
 awk '{ print NF, $0 }' $TEMP0| tail -1 > $TEMP2
 cmp -s $TEMP1 $TEMP2 || fail 'BAD: T.misc END must preserve $0'
 
+$AWK 'function foo(q) {
+	return (q = q);
+}
+BEGIN { print foo("h"); }' > $TEMP1
+echo 'h' > $TEMP2
+diff $TEMP1 $TEMP2 || fail 'BAD: T.misc return tempcell'
+
+
 exit $RESULT

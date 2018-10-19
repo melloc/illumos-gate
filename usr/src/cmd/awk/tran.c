@@ -379,6 +379,7 @@ funnyvar(Cell *vp, const char *rw)
 char *
 setsval(Cell *vp, const char *s)	/* set string val of a Cell */
 {
+	char *t;
 	int	i;
 
 	dprintf(("starting setsval %p: %s = \"%s\", t=%o, r,f=%d,%d\n",
@@ -390,22 +391,20 @@ setsval(Cell *vp, const char *s)	/* set string val of a Cell */
 		i = fldidx(vp);
 		if (i > *NF)
 			newfld(i);
-		dprintf(("setting field %d to %s\n", i, s));
+		dprintf(("setting field %d to %s (%p)\n", i, s, (void *)s));
 	} else if (isrec(vp)) {
 		donefld = 0;	/* mark $1... invalid */
 		donerec = 1;
 	}
-	vp->tval &= ~NUM;
-	vp->tval |= STR;
+	t = tostring(s);	/* in case it's self-assign */
 	if (freeable(vp))
 		xfree(vp->sval);
+	vp->tval &= ~NUM;
+	vp->tval |= STR;
 	vp->tval &= ~DONTFREE;
-	dprintf(("setsval %p: %s = \"%s\", t=%p\n",
-	    (void *)vp,
-	    vp->nval ? (char *)vp->nval : "",
-	    s,
-	    (void *)(vp->tval ? (char *)vp->tval : "")));
-	return (vp->sval = tostring(s));
+	dprintf(("setsval %p: %s = \"%s (%p) \", t=%o\n",
+	    (void *)vp, NN(vp->nval), t, (void *)t, vp->tval));
+	return (vp->sval = t);
 }
 
 Awkfloat
