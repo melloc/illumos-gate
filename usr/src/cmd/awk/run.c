@@ -1868,7 +1868,7 @@ closefile(Node **a, int n)
 	}
 	tempfree(x);
 	x = gettemp();
-	setfval(x, (Awkfloat) stat);
+	(void) setfval(x, (Awkfloat) stat);
 	return (x);
 }
 

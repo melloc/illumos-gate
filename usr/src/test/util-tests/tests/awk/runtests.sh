@@ -1,4 +1,4 @@
-#! /usr/bin/ksh
+#! /usr/bin/ksh93
 #
 #
 # This file and its contents are supplied under the terms of the
@@ -20,6 +20,13 @@ WORKDIR=$(mktemp -d /tmp/nawktest.XXXXXX)
 
 SUCCESSES=0
 TOTAL=0
+
+function proctemplate {
+	bash <<-EOF
+	IFS= read -rd '' OUTPUT < $1;
+	printf "%s" "\${OUTPUT//\\\$AWK/\$AWK}";
+	EOF
+}
 
 while [[ $# -gt 0 ]]; do
 	case $1 in
@@ -90,6 +97,22 @@ for script in examples/awk/t.*; do
 	fi
 done
 
+cd bugs-fixed || exit 1
+for PROG in *.awk; do
+	((TOTAL+=1))
+	export LANG=C
+	printf "$PROG... "
+	$AWK -f $PROG > $WORKDIR/test.temp.out 2>&1 || \
+	    echo EXIT CODE: $? >> $WORKDIR/test.temp.out
+	if diff $WORKDIR/test.temp.out <(proctemplate ${PROG/.awk/.ok}); then
+		printf "ok\n"
+		((SUCCESSES+=1))
+	else
+		printf "failed\n"
+	fi
+done
+cd $TOP
+
 # Run the test programs
 
 printf '\n# One True AWK Test Programs\n\n'
@@ -156,7 +179,7 @@ for PROG in *.awk; do
 		continue
 	fi
 
-	if diff $WORKDIR/test.temp.out <(sed "s|\$AWK|$AWK|g" ${PROG/.awk/.ok}); then
+	if diff $WORKDIR/test.temp.out <(proctemplate ${PROG/.awk/.ok}); then
 		printf "ok\n"
 		((SUCCESSES+=1))
 	else

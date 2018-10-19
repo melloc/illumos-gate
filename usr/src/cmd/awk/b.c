@@ -809,6 +809,38 @@ unary(Node *np)
 	}
 }
 
+/*
+ * Character class definitions conformant to the POSIX locale as
+ * defined in IEEE P1003.1 draft 7 of June 2001, assuming the source
+ * and operating character sets are both ASCII (ISO646) or supersets
+ * thereof.
+ *
+ * Note that to avoid overflowing the temporary buffer used in
+ * relex(), the expanded character class (prior to range expansion)
+ * must be less than twice the size of their full name.
+ */
+
+struct charclass {
+	const char *cc_name;
+	int cc_namelen;
+	int (*cc_func)(int);
+} charclasses[] = {
+	{ "alnum",	5,	isalnum },
+	{ "alpha",	5,	isalpha },
+	{ "blank",	5,	isblank },
+	{ "cntrl",	5,	iscntrl },
+	{ "digit",	5,	isdigit },
+	{ "graph",	5,	isgraph },
+	{ "lower",	5,	islower },
+	{ "print",	5,	isprint },
+	{ "punct",	5,	ispunct },
+	{ "space",	5,	isspace },
+	{ "upper",	5,	isupper },
+	{ "xdigit",	6,	isxdigit },
+	{ NULL,		0,	NULL },
+};
+
+
 static int
 relex(void)		/* lexical analyzer for reparse */
 {
@@ -817,6 +849,8 @@ relex(void)		/* lexical analyzer for reparse */
 	static uschar *buf = 0;
 	static size_t bufsz = 100;
 	uschar *bp;
+	struct charclass *cc;
+	int i;
 
 	switch (c = *prestr++) {
 	case '|': return OR;
@@ -857,6 +891,35 @@ relex(void)		/* lexical analyzer for reparse */
 					    "%.20s...", lastre);
 				}
 				*bp++ = c;
+			} else if (c == '[' && *prestr == ':') {
+				/*
+				 * Handle POSIX character class names.
+				 * Dag-Erling Smorgrav, des@ofug.org
+				 */
+				for (cc = charclasses; cc->cc_name; cc++)
+					if (strncmp((const char *)prestr + 1,
+					    (const char *)cc->cc_name,
+					    cc->cc_namelen) == 0)
+						break;
+
+				if (cc->cc_name == NULL ||
+				    prestr[1 + cc->cc_namelen] != ':' ||
+				    prestr[2 + cc->cc_namelen] != ']') {
+					*bp++ = c;
+					continue;
+				}
+
+				prestr += cc->cc_namelen + 3;
+				/* BUG: can't match NUL character */
+				for (i = 1; i < NCHARS; i++) {
+					(void) adjbuf((char **)&buf, &bufsz,
+					    bp - buf + 1, 100, (char **)&bp,
+					    "relex2");
+					if (cc->cc_func(i)) {
+						*bp++ = i;
+						n++;
+					}
+				}
 			} else if (c == '\0') {
 				FATAL("nonterminated character class %.20s",
 				    lastre);
