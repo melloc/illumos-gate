@@ -74,7 +74,7 @@ CFLAGS		+= $(CCVERBOSE)
 #	Depends on procfs and lx_brand
 #
 LDFLAGS		+= -dy -Nfs/procfs -Nbrand/lx_brand -Ndrv/inotify -Ndrv/ip
-LDFLAGS		+= -Nfs/sockfs -Ncrypto/swrand
+LDFLAGS		+= -Nfs/sockfs -Ncrypto/swrand -Nmisc/cc
 
 #
 # For now, disable these lint checks; maintainers should endeavor

@@ -237,6 +237,9 @@ typedef enum lxpr_nodetype {
 	LXPR_SYS_NET_IPV4_ICMP_EIB,	/* .../icmp_echo_ignore_broadcasts */
 	LXPR_SYS_NET_IPV4_IP_FORWARD,	/* .../net/ipv4/ip_forward */
 	LXPR_SYS_NET_IPV4_IP_LPORT_RANGE, /* .../net/ipv4/ip_local_port_range */
+	LXPR_SYS_NET_IPV4_TCP_CC_ALLOW,	/* .../tcp_allowed_congestion_control */
+	LXPR_SYS_NET_IPV4_TCP_CC_AVAIL,	/* .../tcp_available_congestion_control */
+	LXPR_SYS_NET_IPV4_TCP_CC_CURR,	/* .../tcp_congestion_control */
 	LXPR_SYS_NET_IPV4_TCP_FIN_TO,	/* /proc/sys/net/ipv4/tcp_fin_timeout */
 	LXPR_SYS_NET_IPV4_TCP_KA_INT,	/* .../net/ipv4/tcp_keepalive_intvl */
 	LXPR_SYS_NET_IPV4_TCP_KA_TIM,	/* .../net/ipv4/tcp_keepalive_time */
