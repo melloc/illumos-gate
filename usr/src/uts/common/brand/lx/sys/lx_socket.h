@@ -437,6 +437,131 @@ typedef struct lx_sockaddr_in6 {
 	/* one 32-bit field shorter than illumos */
 } lx_sockaddr_in6_t;
 
+typedef struct lx_tcp_info {
+	/* Current state in TCP state machine */
+	uint8_t		tcpi_state;
+	/* Congestion avoidance state */
+	uint8_t		tcpi_ca_state;
+	/* Number of unrecovered RTO timeouts */
+	uint8_t		tcpi_retransmits;
+	/* Unanswered 0 window probes */
+	uint8_t		tcpi_probes;
+	/* Current exponential backoff for RTO */
+	uint8_t		tcpi_backoff;
+	/* Enabled TCP options */
+	uint8_t		tcpi_options;
+#define	LX_TCPI_OPT_TIMESTAMPS	0x01	/* Negotiated TCP Timestamps */
+#define	LX_TCPI_OPT_SACK	0x02	/* Negotiated SACK */
+#define	LX_TCPI_OPT_WSCALE	0x04	/* Negotiated Window Scaling */
+#define	LX_TCPI_OPT_ECN		0x08	/* Negotiated ECN */
+#define	LX_TCPI_OPT_ECN_SEEN	0x10	/* Received at least 1 packet w/ ECT */
+#define	LX_TCPI_OPT_SYN_DATA	0x20	/* Sent or received SYN-ACK for SYN */
+
+	uint8_t
+		tcpi_snd_wscale : 4,	/* Send window scale shift */
+		tcpi_rcv_wscale : 4;	/* Receive window scale shift */
+
+	/* Whether the application is sending less than the send window */
+	uint8_t		tcpi_delivery_rate_app_limited : 1;
+
+	/* Retransmission timeout (usecs) */
+	uint32_t	tcpi_rto;
+	/* Predicted soft clock tick for delivering delayed ACK */
+	uint32_t	tcpi_ato;
+	/* Maximum Segment Size, sent (RFC 4898 tcpEStatsStackMSSSent) */
+	uint32_t	tcpi_snd_mss;
+	/* Maximum Segment Size, received (RFC 4898 tcpEStatsStackMSSRcvd) */
+	uint32_t	tcpi_rcv_mss;
+
+	/* Sent but unacknowledged bytes */
+	uint32_t	tcpi_unacked;
+	/* With SACK, ; without, # of recvd dups */
+	uint32_t	tcpi_sacked;
+	/* Estimated # of packets lost */
+	uint32_t	tcpi_lost;
+	/* Total # of rexmitted segments */
+	uint32_t	tcpi_retrans;
+	/* # of packets to highest SACKed sequence (deprecated on Linux)*/
+	uint32_t	tcpi_fackets;
+
+	/* Time (msecs) since last sent data */
+	uint32_t	tcpi_last_data_sent;
+	/* Time (msecs) since last sent ACK (not filled in on Linux) */
+	uint32_t	tcpi_last_ack_sent;
+	/* Time (msecs) since last recv data */
+	uint32_t	tcpi_last_data_recv;
+	/* Time (msecs) since last recv ACK */
+	uint32_t	tcpi_last_ack_recv;
+
+	/* Last PMTU seen by socket */
+	uint32_t	tcpi_pmtu;
+	/* Slow start threshold (recv) */
+	uint32_t	tcpi_rcv_ssthresh;
+	/* Smoothed RTT (usecs) */
+	uint32_t	tcpi_rtt;
+	/* RTT variance (usecs) */
+	uint32_t	tcpi_rttvar;
+	/* Slow start threshold (send) */
+	uint32_t	tcpi_snd_ssthresh;
+	/* Send congestion window */
+	uint32_t	tcpi_snd_cwnd;
+	/* Advertised MSS */
+	uint32_t	tcpi_advmss;
+	/* ? */
+	uint32_t	tcpi_reordering;
+
+	/* ? */
+	uint32_t	tcpi_rcv_rtt;
+	/* Advertised recv window */
+	uint32_t	tcpi_rcv_space;
+
+	/* Total # of rexmitted segments for connection */
+	uint32_t	tcpi_total_retrans;
+
+	/* ? */
+	uint64_t	tcpi_pacing_rate;
+	/* ? */
+	uint64_t	tcpi_max_pacing_rate;
+	/* RFC 4898 tcpEStatsAppHCThruOctetsAcked */
+	uint64_t	tcpi_bytes_acked;
+	/* RFC 4898 tcpEStatsAppHCThruOctetsReceived */
+	uint64_t	tcpi_bytes_received;
+	/* RFC 4898 tcpEStatsPerfSegsOut */
+	uint32_t	tcpi_segs_out;
+	/* RFC 4898 tcpEStatsPerfSegsIn */
+	uint32_t	tcpi_segs_in;
+	/* Current # of unsent bytes */
+	uint32_t	tcpi_notsent_bytes;
+	/* Minimum observed RTT */
+	uint32_t	tcpi_min_rtt;
+	/* RFC 4898 tcpEStatsDataSegsIn */
+	uint32_t	tcpi_data_segs_in;
+	/* RFC 4898 tcpEStatsDataSegsOut */
+	uint32_t	tcpi_data_segs_out;
+	/* ? */
+	uint64_t	tcpi_delivery_rate;
+	/* Time (usecs) busy sending data */
+	uint64_t	tcpi_busy_time;
+	/* Time (usecs) limited by received window */
+	uint64_t	tcpi_rwnd_limited;
+	/* Time (usecs) limited by send buffer */
+	uint64_t	tcpi_sndbuf_limited;
+
+	/* Total # of data packets delivered to peer, including rexmits */
+	uint32_t	tcpi_delivered;
+	/* Same as the above field, but only counts ECE-marked packets */
+	uint32_t	tcpi_delivered_ce;
+
+	/* RFC 4898 tcpEStatsPerfHCDataOctetsOut */
+	uint64_t	tcpi_bytes_sent;
+	/* Total # of bytes rexmitted (RFC 4898 tcpEStatsPerfOctetsRetrans) */
+	uint64_t	tcpi_bytes_retrans;
+	/* RFC 4898 tcpEStatsStackDSACKDups */
+	uint32_t	tcpi_dsack_dups;
+	/* # of reordering events seen */
+	uint32_t	tcpi_reord_seen;
+} lx_tcp_info_t;
+
 #ifdef	__cplusplus
 }
 #endif

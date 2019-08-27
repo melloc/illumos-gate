@@ -2808,7 +2808,7 @@ static const lx_sockopt_map_t ltos_tcp_sockopts[LX_TCP_NOTSENT_LOWAT + 1] = {
 	{ TCP_LINGER2, sizeof (int) },		/* TCP_LINGER2		*/
 	{ OPTNOTSUP, 0 },			/* TCP_DEFER_ACCEPT - in code */
 	{ OPTNOTSUP, 0 },			/* TCP_WINDOW_CLAMP - in code */
-	{ OPTNOTSUP, 0 },			/* TCP_INFO		*/
+	{ OPTNOTSUP, 0 },			/* TCP_INFO - in code	*/
 	{ OPTNOTSUP, 0 },			/* TCP_QUICKACK - in code */
 	{ OPTNOTSUP, 0 },			/* TCP_CONGESTION	*/
 	{ OPTNOTSUP, 0 },			/* TCP_MD5SIG		*/
@@ -3392,21 +3392,21 @@ lx_setsockopt_tcp(sonode_t *so, int optname, void *optval, socklen_t optlen)
 	uint32_t rto_max, abrt_thresh;
 	boolean_t abrt_changed = B_FALSE, rto_max_changed = B_FALSE;
 
-	if (optname == LX_TCP_WINDOW_CLAMP || optname == LX_TCP_QUICKACK) {
+	switch (optname) {
+	case LX_TCP_WINDOW_CLAMP:
+	case LX_TCP_QUICKACK:
 		/* It appears safe to lie and say we did these. */
 		return (0);
-	}
 
-	if (optname == LX_TCP_MAXSEG) {
+	case LX_TCP_MAXSEG:
 		/*
 		 * We can get, but not set, TCP_MAXSEG. However, it appears
 		 * safe to lie and say we did this. A future extension might
 		 * be to allow setting this before a connection is established.
 		 */
 		return (0);
-	}
 
-	if (optname == LX_TCP_SYNCNT) {
+	case LX_TCP_SYNCNT: {
 		int intval;
 		uint64_t syn_last_backoff;
 		uint_t syn_cnt, syn_backoff, len;
@@ -3449,7 +3449,7 @@ lx_setsockopt_tcp(sonode_t *so, int optname, void *optval, socklen_t optlen)
 		return (error);
 	}
 
-	if (optname == LX_TCP_DEFER_ACCEPT) {
+	case LX_TCP_DEFER_ACCEPT: {
 		int *intval;
 		char *dfp;
 
@@ -3485,6 +3485,10 @@ lx_setsockopt_tcp(sonode_t *so, int optname, void *optval, socklen_t optlen)
 		}
 		kmem_free(dfp, sizeof (DATAFILT));
 		return (error);
+	}
+
+	default:
+		break;
 	}
 
 	if (!lx_sockopt_lookup(sockopts_tbl, &optname, &optlen)) {
@@ -3824,6 +3828,144 @@ lx_getsockopt_icmpv6(sonode_t *so, int optname, void *optval,
 }
 
 static int
+lx_getsockopt_tcp_info(sonode_t *so, void *optval, socklen_t *optlen)
+{
+	struct lx_tcp_info *info = optval;
+	struct tcpConnEntryInfo_s tcei;
+	struct tcp_s *tcp;
+
+	bzero(info, sizeof (*info));
+	bzero(&tcei, sizeof (tcei));
+
+	tcp_set_conninfo(tcp, &tcei, B_FALSE);
+
+	/*
+	 * This is where we set fields relevant to all connections, including
+	 * listeners. Other fields specific to sending and receiving are set
+	 * later on.
+	 */
+	info->tcpi_state = lxpr_convert_tcp_state(tcei.ce_state);
+
+	info->tcpi_pacing_rate = 0; /* What's our equivalent? */
+	info->tcpi_max_pacing_rate = 0; /* What's our equivalent? */
+
+	info->tcpi_reordering = 0; /* What's our equivalent? */
+	info->tcpi_snd_cwnd = tcei.ce_cwnd;
+
+	if (tcei.ce_state == TCPS_LISTEN) {
+		/*
+		 * When the socket is in state LISTEN, we only need to report
+		 * information about the backlog, and these fields take on new
+		 * meanings:
+		 *
+		 *     - tcpi_unacked, the current backlog length
+		 *     - tcpi_sacked, the maximum permissible backlog length
+		 */
+		info->tcpi_unacked = tcp->tcp_listen_cnt->tlc_cnt;
+		info->tcpi_sacked = tcp->tcp_listen_cnt->tlc_max;
+		return (0);
+	}
+
+	info->tcpi_ca_state = 0; /* What's our equivalent? */
+	info->tcpi_retransmits = 0; /* What's our equivalent? */
+	info->tcpi_probes = tcei.ce_out_zwnd_probes; /* Not quite right; we need a new stat that gets zeroed once we get a response to a probe */
+	info->tcpi_backoff = tcp->tcp_timer_backoff;
+
+	if (tcp->tcp_snd_ts_ok != B_FALSE) {
+		info->tcpi_options |= LX_TCPI_OPT_TIMESTAMPS;
+	}
+
+	if (tcp->tcp_snd_sack_ok != B_FALSE) {
+		info->tcpi_options |= LX_TCPI_OPT_SACK;
+	}
+
+	if (tcp->tcp_snd_ws_ok != B_FALSE) {
+		info->tcpi_options |= LX_TCPI_OPT_WSCALE;
+		info->tcpi_snd_wscale = tcp->tcp_snd_ws;
+		info->tcpi_rcv_wscale = tcp->tcp_rcv_ws;
+	}
+
+	if (tcp->tcp_ecn_ok != B_FALSE) {
+		info->tcpi_options |= LX_TCPI_OPT_ECN;
+	}
+
+	// Need to create equivalent somewhere for TCP_ECN_SEEN
+	// if (tp->ecn_flags & TCP_ECN_SEEN) {
+	// 	info->tcpi_options |= LX_TCPI_OPT_ECN_SEEN;
+	// }
+
+	// if (tp->syn_data_acked) {
+	// 	info->tcpi_options |= LX_TCPI_OPT_SYN_DATA;
+	// }
+
+	info->tcpi_rto = MSEC2USECS(tcei.ce_rto); /* Right units? */
+	info->tcpi_ato = 0; /* No equivalent? */
+	info->tcpi_snd_mss = tcei.ce_mss; /* Is this right? */
+	info->tcpi_rcv_mss = 0; /* Where do we store the received MSS? */
+
+	info->tcpi_unacked = tcei.ce_snxt - tcei.ce_suna; /* Is this right when using SACK? */
+	info->tcpi_sacked = 0; /* What's the equivalent? */
+
+	info->tcpi_lost = 0; /* No equivalent? */
+	info->tcpi_retrans = 0; /* No equivalent? */
+
+	info->tcpi_last_data_sent = 0; /* No equivalent? */
+	info->tcpi_last_data_recv = 0; /* No equivalent? */
+	info->tcpi_last_ack_recv = 0; /* No equivalent? */
+
+	info->tcpi_pmtu = tcp->tcp_initial_pmtu; /* Is this the right value? */
+	info->tcpi_rcv_ssthresh = 0; /* No equivalent? */
+	info->tcpi_rtt = tcei.ce_rtt_sa;
+	info->tcpi_rttvar = NSEC2USEC(tcp->tcp_rtt_sd >> 2);
+	info->tcpi_snd_ssthresh = tcp->tcp_cwnd_ssthresh;
+	info->tcpi_advmss = 0; /* No equivalent? */
+
+	info->tcpi_rcv_rtt = 0; /* No equivalent? */
+	info->tcpi_rcv_space = tcei.ce_rwnd;
+
+	info->tcpi_total_retrans = 0; /* Find equivalent */
+
+	info->tcpi_bytes_acked =
+	    tcei.ce_out_data_bytes; /* Not quite right, I think, since this is bytes sent, not acknowledged. */
+	info->tcpi_bytes_received =
+	    tcei.ce_in_data_inorder_bytes + tcei.ce_in_data_unorder_bytes;
+	info->tcpi_notsent_bytes = tcei.ce_unsent;
+
+	info->tcpi_bytes_sent = tcei.ce_out_data_bytes;
+	info->tcpi_bytes_retrans = tcei.ce_out_retrans_bytes;
+
+	info->tcpi_data_segs_out =
+	    tcei.ce_out_data_segs;
+	info->tcpi_data_segs_in =
+	    tcei.ce_in_data_inorder_segs + tcei.ce_in_data_unorder_segs;
+
+	/*
+	 * These aren't quite right, since data segments isn't the same as all
+	 * segments.
+	 */
+	info->tcpi_segs_out = info->tcpi_segs_out;
+	info->tcpi_segs_in = info->tcpi_data_segs_in;
+
+	/*
+	 * We don't currently have an equivalent for the following statistics, so
+	 * theyll all be left as zero in the struct:
+	 *
+	 * - info->tcpi_busy_time
+	 * - info->tcpi_delivered
+	 * - info->tcpi_delivered_ce
+	 * - info->tcpi_delivery_rate
+	 * - info->tcpi_delivery_rate_app_limited
+	 * - info->tcpi_dsack_dups
+	 * - info->tcpi_min_rtt
+	 * - info->tcpi_reord_seen
+	 * - info->tcpi_rwnd_limited
+	 * - info->tcpi_sndbuf_limited
+	 */
+
+	return (0);
+}
+
+static int
 lx_getsockopt_tcp(sonode_t *so, int optname, void *optval, socklen_t *optlen)
 {
 	int error = 0;
@@ -3916,6 +4058,10 @@ lx_getsockopt_tcp(sonode_t *so, int optname, void *optval, socklen_t *optlen)
 		}
 		*optlen = sizeof (int);
 		return (error);
+
+	case LX_TCP_INFO:
+		return (lx_getsockopt_tcp_info(so, optval, optlen));
+
 	default:
 		break;
 	}
